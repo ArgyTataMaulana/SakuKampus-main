@@ -2,12 +2,7 @@
   "version": 2,
   "functions": {
     "api/index.js": {
-      "includeFiles": [
-        "public/**",
-        "src/config/sql-wasm.wasm",
-        "api/sql-wasm.wasm",
-        "sql-wasm.wasm"
-      ]
+      "includeFiles": "{public/**,api/sql-wasm.wasm,sql-wasm.wasm,node_modules/sql.js/dist/sql-wasm.wasm}"
     }
   },
   "rewrites": [
