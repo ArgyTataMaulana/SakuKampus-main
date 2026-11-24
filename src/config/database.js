@@ -9,23 +9,37 @@ const __dirname = path.dirname(__filename);
 const dbPath = path.resolve(__dirname, '../../sakukampus.db');
 
 // Initialize WebAssembly SQL engine with local wasm binary (Guaranteed to load on Vercel Serverless)
-const wasmLocalPath = path.resolve(__dirname, 'sql-wasm.wasm');
-const wasmFallbackPath = path.resolve(__dirname, '../../node_modules/sql.js/dist/sql-wasm.wasm');
+const candidatePaths = [
+  path.resolve(process.cwd(), 'src/config/sql-wasm.wasm'),
+  path.resolve(process.cwd(), 'api/sql-wasm.wasm'),
+  path.resolve(process.cwd(), 'sql-wasm.wasm'),
+  path.resolve(__dirname, 'sql-wasm.wasm'),
+  path.resolve(__dirname, '../config/sql-wasm.wasm'),
+  path.resolve(__dirname, '../../node_modules/sql.js/dist/sql-wasm.wasm')
+];
 
-let wasmBinary;
-let activeWasmPath = wasmLocalPath;
-if (fs.existsSync(wasmLocalPath)) {
-  wasmBinary = fs.readFileSync(wasmLocalPath);
-  activeWasmPath = wasmLocalPath;
-} else if (fs.existsSync(wasmFallbackPath)) {
-  wasmBinary = fs.readFileSync(wasmFallbackPath);
-  activeWasmPath = wasmFallbackPath;
+let wasmBinary = null;
+let activeWasmPath = null;
+for (const p of candidatePaths) {
+  try {
+    if (fs.existsSync(p)) {
+      wasmBinary = fs.readFileSync(p);
+      activeWasmPath = p;
+      break;
+    }
+  } catch (e) {}
 }
 
-const SQL = await initSqlJs({
-  locateFile: () => activeWasmPath,
-  wasmBinary: wasmBinary
-});
+let SQL;
+try {
+  SQL = await initSqlJs({
+    locateFile: () => activeWasmPath,
+    wasmBinary: wasmBinary
+  });
+} catch (wasmErr) {
+  console.error('Failed to init WebAssembly SQL with custom wasm, falling back:', wasmErr.message);
+  SQL = await initSqlJs();
+}
 
 let rawDb;
 if (fs.existsSync(dbPath)) {

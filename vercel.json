@@ -4,7 +4,9 @@
     "api/index.js": {
       "includeFiles": [
         "public/**",
-        "src/config/sql-wasm.wasm"
+        "src/config/sql-wasm.wasm",
+        "api/sql-wasm.wasm",
+        "sql-wasm.wasm"
       ]
     }
   },
