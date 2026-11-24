@@ -9,6 +9,7 @@ import {
   getGeminiConsultationResponse,
   handleRuleBasedAdvice
 } from '../services/financialAdvisor.js';
+import { getActiveProvider } from '../services/aiProvider.js';
 
 export const chatRouter = express.Router();
 
@@ -97,8 +98,8 @@ chatRouter.post('/', authMiddleware, async (req, res) => {
   let parseResult = parseSentenceWithRules(cleanMessage);
   let parsedBy = 'rule';
 
-  // Fallback to LLM if rule parsing fails (and Gemini key exists)
-  if (!parseResult.success && process.env.GEMINI_API_KEY) {
+  // Fallback to LLM if rule parsing fails (and AI key exists)
+  if (!parseResult.success && getActiveProvider() !== 'none') {
     db.prepare(`
       UPDATE chat_usage
       SET llm_count = llm_count + 1
@@ -174,7 +175,7 @@ chatRouter.post('/', authMiddleware, async (req, res) => {
   // 7. Format success confirmation message
   const formattedNominal = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(createdTx.amount);
   const typeText = createdTx.category_type === 'income' ? 'Pemasukan' : 'Pengeluaran';
-  const parserBadge = parsedBy === 'rule' ? '⚡ Aturan Cepat' : '🤖 AI Gemini';
+  const parserBadge = parsedBy === 'rule' ? '⚡ Aturan Cepat' : `🤖 AI (${getActiveProvider().toUpperCase()})`;
   const sourceBadge = txSource === 'voice' ? '🎙️ Suara' : '💬 Teks';
 
   const isDebt = /\b(utang|hutang|pinjam|minjam|meminjam|ngutang|berutang|kasbon)\b/i.test(createdTx.description) ||

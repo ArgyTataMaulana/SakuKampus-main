@@ -77,8 +77,10 @@ function renderTransactionsTable(transactions) {
       ? '<span class="badge-sand"><i class="fa-solid fa-microphone text-[10px]"></i> Suara</span>'
       : '<span class="badge-sand"><i class="fa-solid fa-comment text-[10px]"></i> Chat</span>';
 
-    const parserBadge = tx.parsed_by === 'llm'
-      ? '<span class="badge-dirt"><i class="fa-solid fa-brain text-[10px]"></i> Gemini</span>'
+    const isAi = tx.parsed_by && (tx.parsed_by.startsWith('ai') || tx.parsed_by === 'llm');
+    const aiLabel = tx.parsed_by && tx.parsed_by.includes('groq') ? 'Groq' : 'Gemini';
+    const parserBadge = isAi
+      ? `<span class="badge-accent"><i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i> AI ${aiLabel}</span>`
       : '<span class="badge-dirt"><i class="fa-solid fa-bolt text-[10px]"></i> Aturan</span>';
 
     const categoryBadge = isIncome

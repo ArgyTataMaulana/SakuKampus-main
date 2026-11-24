@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { aiGenerateJson, getActiveProvider } from './aiProvider.js';
 dotenv.config();
 
 const VALID_CATEGORIES = [
@@ -8,13 +9,13 @@ const VALID_CATEGORIES = [
 ];
 
 /**
- * Call Gemini API with structured JSON output as secondary fallback for complex sentences
- * (Compliant with T8-3 & T8-4 cost mitigation: LLM is only called if rule parser fails)
+ * Call Universal AI Provider (Groq / Gemini) with structured JSON output as secondary fallback
+ * (Compliant with T8-3 & T8-4 cost mitigation: AI is only called if rule parser fails)
  */
 export async function parseSentenceWithLLM(text) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return { success: false, reason: 'GEMINI_API_KEY tidak dikonfigurasi' };
+  const provider = getActiveProvider();
+  if (provider === 'none') {
+    return { success: false, reason: 'Tidak ada API Key AI (GROQ_API_KEY atau GEMINI_API_KEY) yang aktif di .env' };
   }
 
   const prompt = `Anda adalah asisten pencatat keuangan mahasiswa SakuKampus UMY.
@@ -43,33 +44,14 @@ Balas HANYA dalam format JSON murni tanpa markdown, dengan struktur:
 Jika kalimat BUKAN transaksi keuangan atau nominal tidak jelas, balas dengan {"is_transaction": false}.`;
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.1,
-          responseMimeType: 'application/json'
-        }
-      })
-    });
+    const parsed = await aiGenerateJson({ prompt, temperature: 0.1 });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.warn('Gemini API error status:', response.status, errText);
-      return { success: false, reason: `Gemini API error: ${response.status}` };
+    if (!parsed) {
+      return { success: false, reason: 'Respons AI tidak dapat diproses' };
     }
 
-    const resData = await response.json();
-    const candidateText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!candidateText) {
-      return { success: false, reason: 'Respons LLM kosong' };
-    }
-
-    const parsed = JSON.parse(candidateText.trim());
     if (!parsed.is_transaction || !parsed.nominal || parsed.nominal <= 0) {
-      return { success: false, reason: 'LLM menyatakan bukan transaksi yang valid' };
+      return { success: false, reason: 'AI menyatakan bukan transaksi yang valid' };
     }
 
     // Validate category
@@ -89,11 +71,11 @@ Jika kalimat BUKAN transaksi keuangan atau nominal tidak jelas, balas dengan {"i
         description: parsed.description || 'Transaksi SakuKampus',
         occurred_on: parsed.date || new Date().toISOString().split('T')[0],
         raw_text: text,
-        parsed_by: 'llm'
+        parsed_by: `ai (${provider})`
       }
     };
   } catch (err) {
-    console.error('Error invoking LLM:', err.message);
+    console.error('Error invoking AI:', err.message);
     return { success: false, reason: err.message };
   }
 }

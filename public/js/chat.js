@@ -420,7 +420,7 @@ function appendBotTransactionSuccess(botReply, tx) {
           <i class="fa-regular fa-calendar" aria-hidden="true"></i>
           <span>${tx.occurred_on}</span>
           <span>·</span>
-          <span>${tx.parsed_by === 'llm' ? 'AI Gemini' : 'Aturan'}</span>
+          <span>${tx.parsed_by && (tx.parsed_by.startsWith('ai') || tx.parsed_by === 'llm') ? (tx.parsed_by.includes('groq') ? 'AI Groq' : (tx.parsed_by.includes('gemini') || tx.parsed_by === 'llm' ? 'AI Gemini' : 'AI')) : 'Aturan'}</span>
         </p>
       </div>
 

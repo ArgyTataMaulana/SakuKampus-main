@@ -1,4 +1,5 @@
 import { db } from '../config/database.js';
+import { aiGenerateText, getActiveProvider } from './aiProvider.js';
 
 function formatRupiah(num) {
   return new Intl.NumberFormat('id-ID', {
@@ -345,11 +346,11 @@ export function handleRuleBasedAdvice(text, context) {
 }
 
 /**
- * Handle consultation with Gemini AI (if available) with real live database context
+ * Handle consultation with AI (Groq / Gemini via Universal Provider) with real live database context
  */
 export async function getGeminiConsultationResponse(userQuestion, context) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
+  const provider = getActiveProvider();
+  if (provider === 'none') {
     return handleRuleBasedAdvice(userQuestion, context);
   }
 
@@ -408,31 +409,13 @@ Pertanyaan Pengguna:
 Jawablah sesuai seluruh panduan di atas dengan gaya SakuBot yang aktif, bersahabat, dan solutif!`;
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1500
-        }
-      })
-    });
-
-    if (!response.ok) {
-      console.warn('Gemini consultation API returned status:', response.status);
-      return handleRuleBasedAdvice(userQuestion, context);
-    }
-
-    const resData = await response.json();
-    const answer = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+    const answer = await aiGenerateText({ prompt, temperature: 0.7, maxTokens: 750 });
     if (answer) {
       return answer.trim();
     }
     return handleRuleBasedAdvice(userQuestion, context);
   } catch (err) {
-    console.warn('Gemini consultation fallback due to:', err.message);
+    console.warn('AI consultation fallback due to:', err.message);
     return handleRuleBasedAdvice(userQuestion, context);
   }
 }
