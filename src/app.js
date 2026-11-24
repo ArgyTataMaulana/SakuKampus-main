@@ -47,3 +47,5 @@ app.use((err, req, res, next) => {
   console.error('Unhandled server error:', err);
   res.status(500).json({ error: 'Terjadi kesalahan pada server internal.' });
 });
+
+export default app;

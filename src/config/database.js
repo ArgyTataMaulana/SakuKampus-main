@@ -55,7 +55,9 @@ function saveToDisk() {
     const buffer = Buffer.from(data);
     fs.writeFileSync(dbPath, buffer);
   } catch (err) {
-    console.error('Failed to save database to disk:', err.message);
+    if (err.code !== 'EROFS') {
+      console.warn('Failed to save database to disk:', err.message);
+    }
   }
 }
 
