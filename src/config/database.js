@@ -13,13 +13,19 @@ const wasmLocalPath = path.resolve(__dirname, 'sql-wasm.wasm');
 const wasmFallbackPath = path.resolve(__dirname, '../../node_modules/sql.js/dist/sql-wasm.wasm');
 
 let wasmBinary;
+let activeWasmPath = wasmLocalPath;
 if (fs.existsSync(wasmLocalPath)) {
   wasmBinary = fs.readFileSync(wasmLocalPath);
+  activeWasmPath = wasmLocalPath;
 } else if (fs.existsSync(wasmFallbackPath)) {
   wasmBinary = fs.readFileSync(wasmFallbackPath);
+  activeWasmPath = wasmFallbackPath;
 }
 
-const SQL = await initSqlJs(wasmBinary ? { wasmBinary } : {});
+const SQL = await initSqlJs({
+  locateFile: () => activeWasmPath,
+  wasmBinary: wasmBinary
+});
 
 let rawDb;
 if (fs.existsSync(dbPath)) {
