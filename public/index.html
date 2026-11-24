@@ -9,10 +9,10 @@
   <script src="/js/tailwind-config.js"></script>
   <!-- Chart.js CDN for F-07 -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Google Fonts (Inter) -->
+  <!-- Google Fonts (Outfit - Bauhaus Modernist Sans) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/css/styles.css">
@@ -26,22 +26,25 @@
   <div id="mobileSidebarBackdrop" onclick="closeMobileMenu()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 lg:hidden transition-opacity duration-300 opacity-0 pointer-events-none"></div>
 
   <!-- SIDEBAR (DESKTOP & MOBILE DRAWER) -->
-  <aside id="mainSidebar" class="fixed inset-y-0 left-0 z-50 flex flex-col w-72 lg:w-64 h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-transform duration-300 transform -translate-x-full lg:translate-x-0 shadow-lg lg:shadow-none">
+  <aside id="mainSidebar" class="fixed inset-y-0 left-0 z-50 flex flex-col w-72 lg:w-64 h-full bg-white dark:bg-slate-900 border-r-2 border-bauhaus-dark dark:border-night-border transition-transform duration-300 transform -translate-x-full lg:translate-x-0 shadow-lg lg:shadow-none">
     <!-- Brand & Mobile Close X Button -->
-    <div class="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+    <div class="p-5 border-b-2 border-bauhaus-dark dark:border-night-border flex items-center justify-between">
       <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('dashboard')">
-        <div class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+        <div class="w-10 h-10 bg-bauhaus-blue text-white flex items-center justify-center shrink-0 border-2 border-bauhaus-dark shadow-[3px_3px_0px_#121212]">
           <i class="fa-solid fa-wallet text-base" aria-hidden="true"></i>
         </div>
         <div class="truncate">
-          <div class="font-bold text-base tracking-tight text-slate-900 dark:text-slate-100 leading-tight">
-            Saku<span class="text-brand-600 dark:text-brand-400">Kampus</span>
+          <div class="font-extrabold text-base tracking-tighter text-slate-900 dark:text-slate-100 leading-tight uppercase">
+            Saku<span class="text-bauhaus-blue dark:text-bauhaus-yellow">Kampus</span>
           </div>
-          <div class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">TEAM 7 · UMY</div>
+          <div class="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+            <span>TEAM 7 · UMY</span>
+            <span class="w-2 h-2 rounded-full bg-bauhaus-red inline-block" title="Bauhaus Accent"></span>
+          </div>
         </div>
       </div>
       <!-- Close Button X for mobile drawer -->
-      <button type="button" onclick="closeMobileMenu()" class="lg:hidden w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition active:scale-95" title="Tutup Menu (X)" aria-label="Tutup menu">
+      <button type="button" onclick="closeMobileMenu()" class="lg:hidden w-9 h-9 border-2 border-bauhaus-dark bg-white dark:bg-slate-800 hover:bg-bauhaus-yellow text-slate-900 dark:text-slate-100 flex items-center justify-center shadow-[2px_2px_0px_#121212] transition active:translate-x-[1px] active:translate-y-[1px]" title="Tutup Menu (X)" aria-label="Tutup menu">
         <i class="fa-solid fa-xmark text-lg font-bold" aria-hidden="true"></i>
       </button>
     </div>
@@ -70,30 +73,30 @@
     </nav>
 
     <!-- Quota Card in Sidebar (F-09) -->
-    <div class="p-3.5 mx-3 mb-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+    <div class="p-3.5 mx-3 mb-3 border-2 border-bauhaus-dark dark:border-night-border bg-white dark:bg-slate-800 shadow-[2px_2px_0px_#121212] dark:shadow-[2px_2px_0px_#F0C020]">
       <div class="flex items-center justify-between text-xs mb-2">
-        <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wide uppercase">Batas Pemakaian</span>
-        <span id="sidebarQuotaText" class="font-bold text-slate-700 dark:text-slate-200 tabular-nums">50/50</span>
+        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 tracking-wide uppercase">Batas Pemakaian</span>
+        <span id="sidebarQuotaText" class="font-black text-slate-900 dark:text-slate-100 tabular-nums">50/50</span>
       </div>
       <div class="quota-bar-track">
-        <div id="sidebarQuotaBar" class="bg-brand-600 h-1.5 rounded-full transition-all duration-300" style="width: 100%"></div>
+        <div id="sidebarQuotaBar" class="bg-bauhaus-blue h-full transition-all duration-300" style="width: 100%"></div>
       </div>
-      <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 flex items-center justify-between">
+      <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-2 flex items-center justify-between font-semibold">
         <span>Maks. 50 pesan harian</span>
         <span class="feat-chip">F-09</span>
       </p>
     </div>
 
     <!-- User Profile & Logout -->
-    <div class="p-3.5 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-nightbg-card mt-auto">
+    <div class="p-3.5 border-t-2 border-bauhaus-dark dark:border-night-border flex items-center justify-between bg-white dark:bg-nightbg-card mt-auto">
       <div class="flex items-center gap-3 overflow-hidden">
-        <img id="sidebarUserAvatar" src="https://api.dicebear.com/7.x/initials/svg?seed=Dimas" alt="Avatar" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0">
+        <img id="sidebarUserAvatar" src="https://api.dicebear.com/7.x/initials/svg?seed=Dimas" alt="Avatar" class="w-9 h-9 bg-slate-100 dark:bg-slate-800 shrink-0 border-2 border-bauhaus-dark shadow-[1px_1px_0px_#121212]">
         <div class="truncate">
-          <p id="sidebarUserName" class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">Memuat...</p>
-          <p id="sidebarUserEmail" class="text-[11px] text-slate-400 dark:text-slate-500 truncate">user@student.umy.ac.id</p>
+          <p id="sidebarUserName" class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">Memuat...</p>
+          <p id="sidebarUserEmail" class="text-[11px] text-slate-500 dark:text-slate-400 truncate font-mono">user@student.umy.ac.id</p>
         </div>
       </div>
-      <button onclick="handleLogout()" class="p-2 text-slate-400 hover:text-red-500 transition shrink-0" title="Keluar" aria-label="Keluar">
+      <button onclick="handleLogout()" class="p-2 border-2 border-bauhaus-dark hover:bg-bauhaus-red hover:text-white text-slate-700 dark:text-slate-300 shadow-[1px_1px_0px_#121212] transition shrink-0 active:translate-x-[1px] active:translate-y-[1px]" title="Keluar" aria-label="Keluar">
         <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
       </button>
     </div>
@@ -103,29 +106,29 @@
   <div class="flex-1 flex flex-col lg:pl-64 min-w-0">
 
     <!-- Top Header Navbar -->
-    <header class="h-16 bg-white dark:bg-nightbg-card border-b border-slate-200 dark:border-slate-700 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-20">
+    <header class="h-16 bg-white dark:bg-nightbg-card border-b-2 border-bauhaus-dark dark:border-night-border px-4 sm:px-8 flex items-center justify-between sticky top-0 z-20">
       <div class="flex items-center gap-2 sm:gap-3">
         <!-- Mobile menu toggle -->
-        <button onclick="openMobileMenu()" class="lg:hidden p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Buka Menu" aria-label="Buka menu navigasi">
+        <button onclick="openMobileMenu()" class="lg:hidden p-2 border-2 border-bauhaus-dark bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-bauhaus-yellow hover:text-bauhaus-dark shadow-[2px_2px_0px_#121212] transition active:translate-x-[1px] active:translate-y-[1px]" title="Buka Menu" aria-label="Buka menu navigasi">
           <i class="fa-solid fa-bars text-lg" aria-hidden="true"></i>
         </button>
 
         <!-- Dynamic Back Button (Shown when not on dashboard) -->
-        <button id="btnBackToDashboard" onclick="switchView('dashboard')" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-brand-50 hover:text-brand-600 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition" title="Kembali ke Dashboard">
+        <button id="btnBackToDashboard" onclick="switchView('dashboard')" class="hidden items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-bauhaus-yellow hover:text-bauhaus-dark dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 text-xs font-extrabold uppercase tracking-wide border-2 border-bauhaus-dark shadow-[2px_2px_0px_#121212] transition active:translate-x-[1px] active:translate-y-[1px]" title="Kembali ke Dashboard">
           <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
           <span>Kembali</span>
         </button>
 
         <div>
-          <h1 id="topbarTitle" class="text-lg font-bold text-slate-900 dark:text-slate-100">Dashboard Keuangan</h1>
-          <p id="topbarSubtitle" class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block font-sans">Ringkasan saldo & transaksi pintar</p>
+          <h1 id="topbarTitle" class="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-slate-100">Dashboard Keuangan</h1>
+          <p id="topbarSubtitle" class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block font-medium">Ringkasan saldo & asisten transaksi cerdas</p>
         </div>
       </div>
 
       <div class="flex items-center gap-2 sm:gap-3">
         <!-- Manual Add Button -->
-        <button onclick="openAddModal()" class="btn-block-outline inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium" title="Tambah Transaksi Manual">
-          <i class="fa-solid fa-plus text-brand-600" aria-hidden="true"></i>
+        <button onclick="openAddModal()" class="btn-block-outline inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold" title="Tambah Transaksi Manual">
+          <i class="fa-solid fa-plus text-bauhaus-blue" aria-hidden="true"></i>
           <span class="hidden sm:inline">Tambah Manual</span>
         </button>
 
@@ -137,7 +140,7 @@
         </button>
 
         <!-- Theme Toggle -->
-        <button id="mainThemeBtn" class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition" title="Toggle Tema" aria-label="Toggle tema gelap/terang">
+        <button id="mainThemeBtn" class="p-2.5 border-2 border-bauhaus-dark dark:border-night-border bg-white dark:bg-nightbg-card hover:bg-bauhaus-yellow dark:hover:bg-bauhaus-yellow text-slate-900 dark:text-slate-100 shadow-[2px_2px_0px_#121212] dark:shadow-[2px_2px_0px_#F0C020] transition active:translate-x-[1px] active:translate-y-[1px]" title="Toggle Tema" aria-label="Toggle tema gelap/terang">
           <i class="fa-solid fa-moon dark:hidden" aria-hidden="true"></i>
           <i class="fa-solid fa-sun hidden dark:inline" aria-hidden="true"></i>
         </button>
@@ -154,36 +157,36 @@
         <!-- Summary Cards - Varied Layout -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <!-- Total Saldo (Hero Card - Larger) -->
-          <div class="craft-card p-6 bg-white dark:bg-nightbg-card relative overflow-hidden sm:col-span-2 lg:col-span-2">
+          <div class="craft-card p-6 bg-white dark:bg-nightbg-card relative overflow-hidden sm:col-span-2 lg:col-span-2 border-l-[6px] border-l-bauhaus-blue">
             <div class="flex items-start justify-between">
               <div>
                 <span class="label-upper block mb-1">TOTAL SALDO</span>
-                <div id="statTotalBalance" class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tabular-nums">Rp 0</div>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-sans">Akumulasi saldo keseluruhan</p>
+                <div id="statTotalBalance" class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-slate-100 tabular-nums tracking-tight">Rp 0</div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Akumulasi saldo keseluruhan</p>
               </div>
-              <!-- Clean modern wallet icon -->
-              <div class="w-12 h-12 rounded-xl bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-100 dark:border-brand-900/30" aria-hidden="true">
+              <!-- Bauhaus styled wallet icon -->
+              <div class="w-12 h-12 bg-bauhaus-yellow text-bauhaus-dark flex items-center justify-center shrink-0 border-2 border-bauhaus-dark shadow-[2px_2px_0px_#121212]" aria-hidden="true">
                 <i class="fa-solid fa-wallet text-xl"></i>
               </div>
             </div>
           </div>
 
           <!-- Pemasukan Bulan Ini -->
-          <div class="craft-card p-5 bg-white dark:bg-nightbg-card relative overflow-hidden">
+          <div class="craft-card p-5 bg-white dark:bg-nightbg-card relative overflow-hidden border-l-[6px] border-l-emerald-600">
             <span class="label-upper block mb-1">PEMASUKAN BULAN INI</span>
-            <div id="statMonthlyIncome" class="text-xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">Rp 0</div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-sans">Gaji, uang saku & bonus</p>
-            <div class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center" aria-hidden="true">
+            <div id="statMonthlyIncome" class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums">Rp 0</div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Gaji, uang saku & bonus</p>
+            <div class="absolute top-4 right-4 w-9 h-9 bg-emerald-100 text-emerald-800 flex items-center justify-center border-2 border-bauhaus-dark shadow-[2px_2px_0px_#121212]" aria-hidden="true">
               <i class="fa-solid fa-arrow-trend-up text-sm"></i>
             </div>
           </div>
 
           <!-- Pengeluaran Bulan Ini -->
-          <div class="craft-card p-5 bg-white dark:bg-nightbg-card relative overflow-hidden">
+          <div class="craft-card p-5 bg-white dark:bg-nightbg-card relative overflow-hidden border-l-[6px] border-l-bauhaus-red">
             <span class="label-upper block mb-1">PENGELUARAN BULAN INI</span>
-            <div id="statMonthlyExpense" class="text-xl font-bold text-red-500 dark:text-red-400 tabular-nums">Rp 0</div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-sans">Makan, bensin, tagihan, dll</p>
-            <div class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-500 dark:text-red-400 flex items-center justify-center" aria-hidden="true">
+            <div id="statMonthlyExpense" class="text-xl font-extrabold text-bauhaus-red dark:text-red-400 tabular-nums">Rp 0</div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Makan, bensin, tagihan, dll</p>
+            <div class="absolute top-4 right-4 w-9 h-9 bg-red-100 text-bauhaus-red flex items-center justify-center border-2 border-bauhaus-dark shadow-[2px_2px_0px_#121212]" aria-hidden="true">
               <i class="fa-solid fa-arrow-trend-down text-sm"></i>
             </div>
           </div>
@@ -497,12 +500,14 @@
           <span class="text-xs text-slate-400 dark:text-slate-500 font-sans">Dokumentasi Proyek Team 7</span>
         </div>
 
-        <!-- Team Presentation Header -->
-        <div class="craft-card p-8 bg-gradient-to-r from-brand-600 via-sky-500 to-sky-400 relative overflow-hidden text-white rounded-2xl shadow-sm">
+        <!-- Team Presentation Header (Bauhaus Constructivist Poster Banner) -->
+        <div class="craft-card p-8 bg-bauhaus-blue relative overflow-hidden text-white border-2 border-bauhaus-dark shadow-[4px_4px_0px_#121212]">
+          <div class="absolute -right-8 -bottom-8 w-40 h-40 rounded-full bg-bauhaus-yellow border-2 border-bauhaus-dark opacity-30 pointer-events-none"></div>
+          <div class="absolute right-20 top-4 w-12 h-12 bg-bauhaus-red border-2 border-bauhaus-dark opacity-40 pointer-events-none"></div>
           <div class="relative z-10">
-            <span class="text-xs font-semibold tracking-wider uppercase text-white/80 block mb-2">MANAJEMEN PROYEK TI · METODE WATERFALL</span>
-            <h2 class="text-2xl sm:text-3xl font-bold mt-1">SAKU KAMPUS UMY</h2>
-            <p class="text-white/80 text-sm mt-2 max-w-2xl font-sans">
+            <span class="text-xs font-black tracking-widest uppercase text-bauhaus-yellow block mb-2">MANAJEMEN PROYEK TI · METODE WATERFALL</span>
+            <h2 class="text-2xl sm:text-4xl font-black mt-1 uppercase tracking-tight">SAKU KAMPUS UMY</h2>
+            <p class="text-white/90 text-sm mt-2 max-w-2xl font-medium">
               Aplikasi pencatat keuangan berbasis chatbot tanpa formulir panjang, dengan arsitektur Waterfall 11 pertemuan kerja, 4 gate persetujuan, dan 10 fitur in-scope.
             </p>
           </div>
@@ -736,81 +741,81 @@
   </div>
 
   <!-- MANUAL ADD TRANSACTION MODAL -->
-  <div id="addModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-6 sm:p-7 max-w-md w-full space-y-5 animate-popup">
+  <div id="addModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-nightbg-card border-2 border-bauhaus-dark dark:border-night-border shadow-[6px_6px_0px_0px_#121212] dark:shadow-[6px_6px_0px_0px_#F0C020] p-6 sm:p-7 max-w-md w-full space-y-5 animate-popup">
       <!-- Modal Header with working X button -->
-      <div class="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
+      <div class="flex items-center justify-between pb-3.5 border-b-2 border-bauhaus-dark dark:border-night-border">
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-lg bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 flex items-center justify-center text-sm">
+          <div class="w-9 h-9 bg-bauhaus-blue text-white flex items-center justify-center text-sm border-2 border-bauhaus-dark shadow-[2px_2px_0px_#121212]">
             <i class="fa-solid fa-plus" aria-hidden="true"></i>
           </div>
           <div>
-            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">Tambah Transaksi</h3>
-            <p class="text-xs text-slate-400 dark:text-slate-500">Catat pemasukan atau pengeluaran manual</p>
+            <h3 class="text-base font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">Tambah Transaksi</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Catat pemasukan atau pengeluaran manual</p>
           </div>
         </div>
-        <button type="button" onclick="closeAddModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Tutup (X)" aria-label="Tutup">
-          <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+        <button type="button" onclick="closeAddModal()" class="w-8 h-8 border-2 border-bauhaus-dark flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-bauhaus-yellow hover:text-bauhaus-dark shadow-[1px_1px_0px_#121212] transition active:translate-x-[1px] active:translate-y-[1px]" title="Tutup (X)" aria-label="Tutup">
+          <i class="fa-solid fa-xmark text-lg font-bold" aria-hidden="true"></i>
         </button>
       </div>
 
       <form id="addForm" onsubmit="handleSaveAdd(event)" class="space-y-4">
         <!-- Type Selection -->
         <div class="segment-pill">
-          <button type="button" id="btnAddTypeExpense" onclick="setAddType('expense')" class="flex-1 py-2 text-xs font-semibold active text-expense">
+          <button type="button" id="btnAddTypeExpense" onclick="setAddType('expense')" class="flex-1 py-2 text-xs font-bold active text-expense">
             Pengeluaran
           </button>
-          <button type="button" id="btnAddTypeIncome" onclick="setAddType('income')" class="flex-1 py-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+          <button type="button" id="btnAddTypeIncome" onclick="setAddType('income')" class="flex-1 py-2 text-xs font-bold text-slate-500 dark:text-slate-400">
             Pemasukan
           </button>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Nominal (Rupiah)</label>
-          <input type="number" id="addAmount" required min="100" placeholder="Contoh: 25000" class="w-full px-3.5 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition tabular-nums">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Nominal (Rupiah)</label>
+          <input type="number" id="addAmount" required min="100" placeholder="Contoh: 25000" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border-2 border-bauhaus-dark text-sm text-slate-900 dark:text-slate-100 outline-none tabular-nums font-bold">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Kategori</label>
-          <select id="addCategory" required class="w-full px-3.5 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Kategori</label>
+          <select id="addCategory" required class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border-2 border-bauhaus-dark text-sm text-slate-900 dark:text-slate-100 outline-none font-medium">
             <!-- Populated dynamically based on type -->
           </select>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Keterangan</label>
-          <input type="text" id="addDesc" required placeholder="Contoh: Makan siang ayam geprek" class="w-full px-3.5 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Keterangan</label>
+          <input type="text" id="addDesc" required placeholder="Contoh: Makan siang ayam geprek" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border-2 border-bauhaus-dark text-sm text-slate-900 dark:text-slate-100 outline-none font-medium">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Tanggal Transaksi</label>
-          <input type="date" id="addDate" required class="w-full px-3.5 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Tanggal Transaksi</label>
+          <input type="date" id="addDate" required class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border-2 border-bauhaus-dark text-sm text-slate-900 dark:text-slate-100 outline-none font-medium">
         </div>
 
         <div class="flex gap-2.5 pt-2">
-          <button type="button" onclick="closeAddModal()" class="btn-block-outline flex-1 py-2.5 text-xs font-semibold">Batal</button>
-          <button type="submit" class="btn-block-primary flex-1 py-2.5 text-xs font-semibold">Simpan</button>
+          <button type="button" onclick="closeAddModal()" class="btn-block-outline flex-1 py-2.5 text-xs font-bold uppercase tracking-wider">Batal</button>
+          <button type="submit" class="btn-block-primary flex-1 py-2.5 text-xs font-bold uppercase tracking-wider">Simpan</button>
         </div>
       </form>
     </div>
   </div>
 
   <!-- EDIT TRANSACTION MODAL (F-10) -->
-  <div id="editModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-6 sm:p-7 max-w-md w-full space-y-5 animate-popup">
+  <div id="editModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-nightbg-card border-2 border-bauhaus-dark dark:border-night-border shadow-[6px_6px_0px_0px_#121212] dark:shadow-[6px_6px_0px_0px_#F0C020] p-6 sm:p-7 max-w-md w-full space-y-5 animate-popup">
       <!-- Header with X Button -->
-      <div class="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
+      <div class="flex items-center justify-between pb-3.5 border-b-2 border-bauhaus-dark dark:border-night-border">
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-lg bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 flex items-center justify-center text-sm">
+          <div class="w-9 h-9 bg-bauhaus-yellow text-bauhaus-dark flex items-center justify-center text-sm border-2 border-bauhaus-dark shadow-[2px_2px_0px_#121212]">
             <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
           </div>
           <div>
-            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">Ubah Transaksi</h3>
-            <p class="text-xs text-slate-400 dark:text-slate-500">Edit detail transaksi yang sudah ada</p>
+            <h3 class="text-base font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">Ubah Transaksi</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Edit detail transaksi yang sudah ada</p>
           </div>
         </div>
-        <button type="button" onclick="closeEditModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Tutup (X)" aria-label="Tutup">
-          <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+        <button type="button" onclick="closeEditModal()" class="w-8 h-8 border-2 border-bauhaus-dark flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-bauhaus-yellow hover:text-bauhaus-dark shadow-[1px_1px_0px_#121212] transition active:translate-x-[1px] active:translate-y-[1px]" title="Tutup (X)" aria-label="Tutup">
+          <i class="fa-solid fa-xmark text-lg font-bold" aria-hidden="true"></i>
         </button>
       </div>
 
@@ -818,48 +823,48 @@
         <input type="hidden" id="editTxId">
 
         <div>
-          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Nominal (Rupiah)</label>
-          <input type="number" id="editAmount" required min="100" class="w-full px-3.5 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition tabular-nums">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Nominal (Rupiah)</label>
+          <input type="number" id="editAmount" required min="100" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border-2 border-bauhaus-dark text-sm text-slate-900 dark:text-slate-100 outline-none tabular-nums font-bold">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Kategori</label>
-          <select id="editCategory" required class="w-full px-3.5 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Kategori</label>
+          <select id="editCategory" required class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border-2 border-bauhaus-dark text-sm text-slate-900 dark:text-slate-100 outline-none font-medium">
             <!-- Populated dynamically -->
           </select>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Keterangan</label>
-          <input type="text" id="editDesc" required class="w-full px-3.5 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Keterangan</label>
+          <input type="text" id="editDesc" required class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border-2 border-bauhaus-dark text-sm text-slate-900 dark:text-slate-100 outline-none font-medium">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Tanggal Transaksi</label>
-          <input type="date" id="editDate" required class="w-full px-3.5 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Tanggal Transaksi</label>
+          <input type="date" id="editDate" required class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border-2 border-bauhaus-dark text-sm text-slate-900 dark:text-slate-100 outline-none font-medium">
         </div>
 
         <div class="flex gap-2.5 pt-2">
-          <button type="button" onclick="closeEditModal()" class="btn-block-outline flex-1 py-2.5 text-xs font-semibold">Batal</button>
-          <button type="submit" class="btn-block-primary flex-1 py-2.5 text-xs font-semibold">Simpan Perubahan</button>
+          <button type="button" onclick="closeEditModal()" class="btn-block-outline flex-1 py-2.5 text-xs font-bold uppercase tracking-wider">Batal</button>
+          <button type="submit" class="btn-block-primary flex-1 py-2.5 text-xs font-bold uppercase tracking-wider">Simpan Perubahan</button>
         </div>
       </form>
     </div>
   </div>
 
   <!-- DELETE CONFIRMATION MODAL (F-10) -->
-  <div id="deleteModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-6 max-w-sm w-full text-center space-y-4 animate-popup">
-      <div class="w-12 h-12 rounded-full bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 flex items-center justify-center text-xl mx-auto border border-red-100 dark:border-red-900/40">
+  <div id="deleteModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-nightbg-card border-2 border-bauhaus-dark dark:border-night-border shadow-[6px_6px_0px_0px_#121212] dark:shadow-[6px_6px_0px_0px_#D02020] p-6 max-w-sm w-full text-center space-y-4 animate-popup">
+      <div class="w-12 h-12 bg-red-100 dark:bg-red-950/50 text-bauhaus-red border-2 border-bauhaus-dark shadow-[2px_2px_0px_#121212] flex items-center justify-center text-xl mx-auto">
         <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
       </div>
       <div>
-        <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">Hapus Transaksi?</h3>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5">Data transaksi ini akan dihapus secara permanen dari sistem.</p>
+        <h3 class="text-base font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">Hapus Transaksi?</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Data transaksi ini akan dihapus secara permanen dari sistem.</p>
       </div>
       <div class="flex gap-2 pt-2">
-        <button type="button" onclick="closeDeleteModal()" class="btn-block-outline flex-1 py-2.5 text-xs font-semibold">Batal</button>
-        <button type="button" id="btnConfirmDelete" class="btn-block-danger flex-1 py-2.5 text-xs font-semibold">Ya, Hapus</button>
+        <button type="button" onclick="closeDeleteModal()" class="btn-block-outline flex-1 py-2.5 text-xs font-bold uppercase tracking-wider">Batal</button>
+        <button type="button" id="btnConfirmDelete" class="btn-block-danger flex-1 py-2.5 text-xs font-bold uppercase tracking-wider">Ya, Hapus</button>
       </div>
     </div>
   </div>

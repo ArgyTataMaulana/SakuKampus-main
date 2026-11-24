@@ -7,14 +7,14 @@ let cachedChartData = null;
 let currentTrendPeriod = '7d'; // '7d', '30d', or 'monthly'
 
 const CATEGORY_COLORS = {
-  'Makan': '#FB923C',                // Warm orange (Seimart sign accent)
-  'Transportasi': '#38BDF8',         // Vivid sky blue
-  'Belanja': '#2563EB',              // Hokkaido poster royal blue
-  'Tagihan': '#F87171',              // Soft coral red
-  'Hiburan': '#818CF8',              // Soft periwinkle
-  'Kesehatan': '#2DD4BF',            // Fresh soft teal
-  'Pendidikan': '#60A5FA',           // Hokkaido powder sky
-  'Lain-lain pengeluaran': '#94A3B8' // Clean soft slate
+  'Makan': '#D02020',                // Bauhaus Primary Red
+  'Transportasi': '#1040C0',         // Bauhaus Primary Ultramarine Blue
+  'Belanja': '#F0C020',              // Bauhaus Primary Chrome Yellow
+  'Tagihan': '#121212',              // Bauhaus Charcoal Ink
+  'Hiburan': '#E11D48',              // Crimson Accent
+  'Kesehatan': '#059669',            // Constructivist Green
+  'Pendidikan': '#2563EB',           // Cobalt Blue
+  'Lain-lain pengeluaran': '#64748B' // Architecture Gray
 };
 
 function formatRupiah(num) {
@@ -128,7 +128,7 @@ function renderRecentTransactions(transactions) {
     return `
       <div class="py-3.5 flex items-center justify-between text-xs font-sans">
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl ${iconClass} flex items-center justify-center shrink-0 text-sm">
+          <div class="w-9 h-9 border-2 border-bauhaus-dark shadow-[2px_2px_0px_#121212] ${iconClass} flex items-center justify-center shrink-0 text-sm">
             ${catIcon}
           </div>
           <div>
@@ -210,12 +210,12 @@ async function loadChartsData() {
               data,
               backgroundColor: bgColors,
               borderWidth: 2,
-              borderColor: isDark ? '#111C3A' : '#ffffff',
-              borderRadius: 6,
-              spacing: 4,
-              hoverOffset: 14,
+              borderColor: isDark ? '#1C1C22' : '#121212',
+              borderRadius: 0,
+              spacing: 3,
+              hoverOffset: 12,
               hoverBorderWidth: 3,
-              hoverBorderColor: isDark ? '#38BDF8' : '#2563EB'
+              hoverBorderColor: isDark ? '#F0C020' : '#121212'
             }]
           },
           options: {
@@ -249,25 +249,25 @@ async function loadChartsData() {
               legend: {
                 position: 'bottom',
                 labels: {
-                  color: isDark ? '#94A3B8' : '#64748B',
-                  font: { family: 'Inter', size: 11, weight: '500' },
-                  boxWidth: 10,
-                  boxHeight: 10,
-                  borderRadius: 3,
+                  color: isDark ? '#F4F1EA' : '#121212',
+                  font: { family: 'Outfit', size: 11, weight: '700' },
+                  boxWidth: 12,
+                  boxHeight: 12,
+                  borderRadius: 0,
                   useBorderRadius: true,
-                  padding: 12
+                  padding: 14
                 }
               },
               tooltip: {
-                backgroundColor: isDark ? 'rgba(17, 28, 58, 0.95)' : 'rgba(255, 255, 255, 0.96)',
-                titleColor: isDark ? '#F0F7FF' : '#0F172A',
-                bodyColor: isDark ? '#93C5FD' : '#334155',
-                borderColor: isDark ? 'rgba(56, 189, 248, 0.3)' : 'rgba(37, 99, 235, 0.15)',
-                borderWidth: 1,
+                backgroundColor: isDark ? '#1C1C22' : '#FFFFFF',
+                titleColor: isDark ? '#F0C020' : '#121212',
+                bodyColor: isDark ? '#F4F1EA' : '#121212',
+                borderColor: isDark ? '#F0C020' : '#121212',
+                borderWidth: 2,
                 padding: 10,
-                cornerRadius: 10,
+                cornerRadius: 0,
                 boxPadding: 4,
-                usePointStyle: true,
+                usePointStyle: false,
                 callbacks: {
                   label: function(context) {
                     const val = context.parsed;
@@ -373,9 +373,9 @@ function renderTrendChart() {
     trendChartInstance.destroy();
   }
 
-  // Linear Gradient Fill Generators for Wow AI Look
-  const incomeColor = isDark ? '#34D399' : '#10B981';
-  const expenseColor = isDark ? '#FB7185' : '#F43F5E';
+  // Linear Gradient Fill Generators for Bauhaus Look
+  const incomeColor = isDark ? '#34D399' : '#059669';
+  const expenseColor = isDark ? '#F87171' : '#D02020';
 
   trendChartInstance = new Chart(ctxTrend, {
     type: 'line',
@@ -462,24 +462,24 @@ function renderTrendChart() {
           position: 'top',
           labels: {
             color: textColor,
-            font: { family: 'Inter', size: 11, weight: '500' },
-            boxWidth: 10,
-            boxHeight: 10,
+            font: { family: 'Outfit', size: 11, weight: '700' },
+            boxWidth: 12,
+            boxHeight: 12,
             useBorderRadius: true,
-            borderRadius: 3,
+            borderRadius: 0,
             padding: 14
           }
         },
         tooltip: {
-          backgroundColor: isDark ? 'rgba(17, 28, 58, 0.95)' : 'rgba(255, 255, 255, 0.96)',
-          titleColor: isDark ? '#F0F7FF' : '#0F172A',
-          bodyColor: isDark ? '#93C5FD' : '#334155',
-          borderColor: isDark ? 'rgba(56, 189, 248, 0.3)' : 'rgba(37, 99, 235, 0.15)',
-          borderWidth: 1,
+          backgroundColor: isDark ? '#1C1C22' : '#FFFFFF',
+          titleColor: isDark ? '#F0C020' : '#121212',
+          bodyColor: isDark ? '#F4F1EA' : '#121212',
+          borderColor: isDark ? '#F0C020' : '#121212',
+          borderWidth: 2,
           padding: 10,
-          cornerRadius: 10,
+          cornerRadius: 0,
           boxPadding: 4,
-          usePointStyle: true,
+          usePointStyle: false,
           callbacks: {
             label: function(context) {
               return ` ${context.dataset.label}: ${formatRupiah(context.parsed.y)}`;
@@ -492,7 +492,7 @@ function renderTrendChart() {
           grid: { color: gridColor },
           ticks: {
             color: textColor,
-            font: { family: 'Inter', size: currentTrendPeriod === '30d' ? 9 : 10 },
+            font: { family: 'Outfit', size: currentTrendPeriod === '30d' ? 9 : 10, weight: '600' },
             maxRotation: currentTrendPeriod === '30d' ? 45 : 0
           }
         },
@@ -500,7 +500,7 @@ function renderTrendChart() {
           grid: { color: gridColor },
           ticks: {
             color: textColor,
-            font: { family: 'Inter', size: 10 },
+            font: { family: 'Outfit', size: 10, weight: '600' },
             callback: function(value) {
               if (value >= 1000000) return (value / 1000000) + ' jt';
               if (value >= 1000) return (value / 1000) + ' rb';
