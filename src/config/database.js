@@ -8,8 +8,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const dbPath = path.resolve(__dirname, '../../sakukampus.db');
 
-// Initialize WebAssembly SQL engine (Pure JS, no C++ compilation needed, 100% compatible with Node 24)
-const SQL = await initSqlJs();
+// Initialize WebAssembly SQL engine with local wasm binary (Guaranteed to load on Vercel Serverless)
+const wasmLocalPath = path.resolve(__dirname, 'sql-wasm.wasm');
+const wasmFallbackPath = path.resolve(__dirname, '../../node_modules/sql.js/dist/sql-wasm.wasm');
+
+let wasmBinary;
+if (fs.existsSync(wasmLocalPath)) {
+  wasmBinary = fs.readFileSync(wasmLocalPath);
+} else if (fs.existsSync(wasmFallbackPath)) {
+  wasmBinary = fs.readFileSync(wasmFallbackPath);
+}
+
+const SQL = await initSqlJs(wasmBinary ? { wasmBinary } : {});
 
 let rawDb;
 if (fs.existsSync(dbPath)) {
