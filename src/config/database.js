@@ -208,6 +208,27 @@ export function initDatabase() {
     );
   `);
 
+  const catCount = db.prepare('SELECT COUNT(*) as cnt FROM categories').get()?.cnt || 0;
+  if (catCount === 0) {
+    const defaultCats = [
+      ['Makan', 'expense'],
+      ['Transportasi', 'expense'],
+      ['Belanja', 'expense'],
+      ['Tagihan', 'expense'],
+      ['Hiburan', 'expense'],
+      ['Kesehatan', 'expense'],
+      ['Pendidikan', 'expense'],
+      ['Lain-lain pengeluaran', 'expense'],
+      ['Gaji', 'income'],
+      ['Uang saku', 'income'],
+      ['Bonus', 'income'],
+      ['Lain-lain pemasukan', 'income']
+    ];
+    for (const [name, type] of defaultCats) {
+      db.prepare('INSERT OR IGNORE INTO categories (name, type) VALUES (?, ?)').run(name, type);
+    }
+  }
+
   console.log('✅ Inisialisasi Database: Siap');
   console.log('☁️  Supabase Cloud Sync: AKTIF');
 }
