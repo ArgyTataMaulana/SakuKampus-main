@@ -36,6 +36,11 @@ async function loadTransactions() {
   const start_date = document.getElementById('filterStartDate')?.value || '';
   const end_date = document.getElementById('filterEndDate')?.value || '';
 
+  if (start_date && end_date && start_date > end_date) {
+    showToast('Tanggal mulai tidak boleh lebih besar dari tanggal akhir.', 'warning');
+    return;
+  }
+
   const params = new URLSearchParams();
   if (search) params.append('search', search);
   if (type) params.append('type', type);
@@ -161,11 +166,19 @@ function closeEditModal() {
 
 async function handleSaveEdit(e) {
   e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  if (submitBtn && submitBtn.disabled) return;
+
   const txId = document.getElementById('editTxId').value;
   const amount = document.getElementById('editAmount').value;
   const category_id = document.getElementById('editCategory').value;
   const description = document.getElementById('editDesc').value;
   const occurred_on = document.getElementById('editDate').value;
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.classList.add('opacity-60', 'cursor-not-allowed');
+  }
 
   try {
     const res = await api.put(`/api/transactions/${txId}`, {
@@ -185,6 +198,11 @@ async function handleSaveEdit(e) {
     }
   } catch (err) {
     showToast('Terjadi kesalahan saat menyimpan perubahan.', 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+    }
   }
 }
 
@@ -194,7 +212,13 @@ function openDeleteModal(txId) {
   const modal = document.getElementById('deleteModal');
   const confirmBtn = document.getElementById('btnConfirmDelete');
 
+  confirmBtn.disabled = false;
+  confirmBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+
   confirmBtn.onclick = async () => {
+    if (confirmBtn.disabled || !pendingDeleteId) return;
+    confirmBtn.disabled = true;
+    confirmBtn.classList.add('opacity-60', 'cursor-not-allowed');
     try {
       const res = await api.delete(`/api/transactions/${pendingDeleteId}`);
       if (res.success) {
@@ -207,6 +231,9 @@ function openDeleteModal(txId) {
       }
     } catch (err) {
       showToast('Terjadi kesalahan saat menghapus transaksi.', 'error');
+    } finally {
+      confirmBtn.disabled = false;
+      confirmBtn.classList.remove('opacity-60', 'cursor-not-allowed');
     }
   };
 

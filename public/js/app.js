@@ -8,6 +8,21 @@ let currentAddType = 'expense';
 document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
   initModalListeners();
+
+  // Deep-link routing support
+  const path = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  const routeMap = {
+    '/chat': 'chat',
+    '/history': 'history',
+    '/transactions': 'history',
+    '/about': 'about',
+    '/dashboard': 'dashboard'
+  };
+  const initialView = routeMap[path] || 'dashboard';
+  if (initialView !== 'dashboard') {
+    switchView(initialView);
+  }
+
   await checkAuth();
   await loadCategories();
   await loadDashboardData();
@@ -63,6 +78,14 @@ function showToast(message, type = 'success') {
 // View Navigation Switcher
 function switchView(viewName) {
   currentView = viewName;
+  try {
+    const targetPath = viewName === 'dashboard' ? '/' : `/${viewName}`;
+    if (window.location.protocol.startsWith('http') && window.location.pathname !== targetPath) {
+      window.history.replaceState(null, '', targetPath);
+    }
+  } catch {
+    // Ignore history API errors in restricted contexts
+  }
   // Automatically close mobile sidebar drawer on navigation!
   closeMobileMenu();
 
@@ -177,7 +200,8 @@ function openAddModal() {
   const addModal = document.getElementById('addModal');
   const dateInput = document.getElementById('addDate');
   if (dateInput) {
-    dateInput.value = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    dateInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   }
   setAddType('expense');
   if (addModal) addModal.classList.remove('hidden');
@@ -211,10 +235,18 @@ function setAddType(type) {
 
 async function handleSaveAdd(e) {
   e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  if (submitBtn && submitBtn.disabled) return;
+
   const amount = document.getElementById('addAmount').value;
   const category_id = document.getElementById('addCategory').value;
   const description = document.getElementById('addDesc').value;
   const occurred_on = document.getElementById('addDate').value;
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.classList.add('opacity-60', 'cursor-not-allowed');
+  }
 
   try {
     const res = await api.post('/api/transactions', {
@@ -235,6 +267,11 @@ async function handleSaveAdd(e) {
     }
   } catch (err) {
     showToast('Terjadi kesalahan saat menyimpan transaksi.', 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+    }
   }
 }
 

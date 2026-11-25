@@ -278,6 +278,10 @@
             </div>
             <div class="h-64 flex items-center justify-center relative">
               <canvas id="trendChart"></canvas>
+              <div id="emptyTrendChart" class="hidden text-center text-slate-400 text-sm">
+                <i class="fa-solid fa-chart-line text-3xl mb-2 opacity-40" aria-hidden="true"></i>
+                <p>Belum ada data tren pemasukan/pengeluaran</p>
+              </div>
             </div>
           </div>
         </div>
@@ -772,7 +776,7 @@
 
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Nominal (Rupiah)</label>
-          <input type="number" id="addAmount" required min="100" placeholder="Contoh: 25000" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border-2 border-bauhaus-dark text-sm text-slate-900 dark:text-slate-100 outline-none tabular-nums font-bold">
+          <input type="number" id="addAmount" required min="100" max="100000000" placeholder="Contoh: 25000" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border-2 border-bauhaus-dark text-sm text-slate-900 dark:text-slate-100 outline-none tabular-nums font-bold">
         </div>
 
         <div>
@@ -784,7 +788,7 @@
 
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Keterangan</label>
-          <input type="text" id="addDesc" required placeholder="Contoh: Makan siang ayam geprek" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border-2 border-bauhaus-dark text-sm text-slate-900 dark:text-slate-100 outline-none font-medium">
+          <input type="text" id="addDesc" required maxlength="200" placeholder="Contoh: Makan siang ayam geprek" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border-2 border-bauhaus-dark text-sm text-slate-900 dark:text-slate-100 outline-none font-medium">
         </div>
 
         <div>
@@ -824,7 +828,7 @@
 
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Nominal (Rupiah)</label>
-          <input type="number" id="editAmount" required min="100" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border-2 border-bauhaus-dark text-sm text-slate-900 dark:text-slate-100 outline-none tabular-nums font-bold">
+          <input type="number" id="editAmount" required min="100" max="100000000" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border-2 border-bauhaus-dark text-sm text-slate-900 dark:text-slate-100 outline-none tabular-nums font-bold">
         </div>
 
         <div>
@@ -836,7 +840,7 @@
 
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Keterangan</label>
-          <input type="text" id="editDesc" required class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border-2 border-bauhaus-dark text-sm text-slate-900 dark:text-slate-100 outline-none font-medium">
+          <input type="text" id="editDesc" required maxlength="200" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border-2 border-bauhaus-dark text-sm text-slate-900 dark:text-slate-100 outline-none font-medium">
         </div>
 
         <div>

@@ -50,7 +50,8 @@ const CATEGORY_KEYWORDS = {
   'Pendidikan': [
     'buku', 'modul', 'print', 'ngeprint', 'fotokopi', 'fotocopy', 'atk',
     'alat tulis', 'pulpen', 'pensil', 'kertas', 'skripsi', 'praktikum',
-    'seminar', 'kursus', 'ujian', 'pendadaran', 'kuliah', 'diktat'
+    'seminar', 'kursus', 'ujian', 'pendadaran', 'kuliah', 'diktat',
+    'ukt', 'uang kuliah', 'spp kuliah'
   ],
   'Lain-lain pengeluaran': [
     'sedekah', 'infak', 'infaq', 'donasi', 'zakat', 'kas', 'sumbangan',
@@ -64,7 +65,7 @@ const CATEGORY_KEYWORDS = {
   ],
   'Uang saku': [
     'uang saku', 'sangu', 'kiriman', 'transferan ortu', 'transfer ortu',
-    'orang tua', 'ibu', 'ayah', 'bapak', 'jatah', 'beasiswa'
+    'orang tua', 'ibu', 'ayah', 'bapak', 'jatah', 'beasiswa', 'dikasih', 'diberi'
   ],
   'Bonus': [
     'bonus', 'thr', 'hadiah', 'reward', 'giveaway', 'cashback', 'tips',
@@ -87,9 +88,9 @@ const EXPENSE_TRIGGERS = [
 
 // Income trigger keywords
 const INCOME_TRIGGERS = [
-  'gaji', 'gajian', 'dapat', 'terima', 'dapet', 'kiriman', 'transferan dari',
-  'tf dari', 'masuk', 'uang saku', 'sangu', 'bonus', 'thr', 'upah', 'honor',
-  'beasiswa', 'jual', 'jualan', 'laku', 'cashback'
+  'gaji', 'gajian', 'dapat', 'terima', 'dapet', 'dikasih', 'diberi', 'kiriman',
+  'transferan dari', 'tf dari', 'masuk', 'uang saku', 'sangu', 'bonus', 'thr',
+  'upah', 'honor', 'beasiswa', 'jual', 'jualan', 'laku', 'cashback'
 ];
 
 /**
@@ -112,19 +113,18 @@ export function extractNominal(text) {
     return Math.round(val * 1000);
   }
 
-  // Pattern 3: Number with currency/dot notation (e.g., Rp 25.000, 25.000, 1500000, 50000)
-  // Match standard Indonesian rupiah formatted numbers
-  const standardMatch = clean.match(/(?:rp\.?\s*)?(\d{1,3}(?:\.\d{3})+)/);
+  // Pattern 3: Number with currency/dot/comma thousand notation (e.g., Rp 25.000, 25,000, 1500000)
+  const standardMatch = clean.match(/(?:rp\.?\s*)?(\d{1,3}(?:[.,]\d{3})+)\b/);
   if (standardMatch) {
-    const num = parseInt(standardMatch[1].replace(/\./g, ''), 10);
+    const num = parseInt(standardMatch[1].replace(/[.,]/g, ''), 10);
     if (!isNaN(num) && num > 0) return num;
   }
 
-  // Pattern 4: Bare digits (e.g., 15000, 25000)
-  const bareDigitsMatch = clean.match(/(?:rp\.?\s*)?(\b\d{4,9}\b)/);
+  // Pattern 4: Bare digits (e.g., 500, 15000, 25000)
+  const bareDigitsMatch = clean.match(/(?:rp\.?\s*)?(\b\d{3,9}\b)/);
   if (bareDigitsMatch) {
     const num = parseInt(bareDigitsMatch[1], 10);
-    if (!isNaN(num) && num >= 500) return num;
+    if (!isNaN(num) && num >= 100) return num;
   }
 
   // Pattern 5: Indonesian words (e.g., dua puluh ribu, lima puluh ribu)
@@ -153,21 +153,28 @@ export function extractNominal(text) {
 }
 
 /**
- * Determine transaction date from natural text
+ * Determine transaction date from natural text (Local WIB-safe)
  */
 export function extractDate(text) {
   const clean = text.toLowerCase();
   const d = new Date();
 
-  if (clean.includes('kemarin')) {
-    d.setDate(d.getDate() - 1);
-  } else if (clean.includes('lusa') || clean.includes('2 hari lalu') || clean.includes('dua hari lalu')) {
+  if (clean.includes('kemarin lusa') || clean.includes('2 hari lalu') || clean.includes('dua hari lalu')) {
     d.setDate(d.getDate() - 2);
   } else if (clean.includes('3 hari lalu') || clean.includes('tiga hari lalu')) {
     d.setDate(d.getDate() - 3);
+  } else if (clean.includes('kemarin')) {
+    d.setDate(d.getDate() - 1);
+  } else if (clean.includes('besok')) {
+    d.setDate(d.getDate() + 1);
+  } else if (clean.includes('lusa')) {
+    d.setDate(d.getDate() + 2);
   }
 
-  return d.toISOString().split('T')[0];
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 /**
@@ -250,7 +257,7 @@ export function generateDescription(rawText, category, type, nominal) {
   // Strip out nominal numbers and triggers to keep clean title
   let cleaned = rawText
     .replace(/(?:rp\.?\s*)?\d+(?:[.,]\d+)?\s*(?:jt|juta|rb|k|ribu)?/gi, '')
-    .replace(/\b(kemarin|hari ini|tadi|lusa)\b/gi, '')
+    .replace(/\b(kemarin lusa|kemarin|hari ini|tadi|besok|lusa)\b/gi, '')
     .replace(/^(aku|saya)\s+/i, '')
     .trim();
 

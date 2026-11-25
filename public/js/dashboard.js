@@ -344,6 +344,20 @@ function renderTrendChart() {
   // Update Net Badge in Card Header
   const totalInc = incomeData.reduce((a, b) => a + b, 0);
   const totalExp = expenseData.reduce((a, b) => a + b, 0);
+  const emptyTrendPlaceholder = document.getElementById('emptyTrendChart');
+
+  if (totalInc === 0 && totalExp === 0) {
+    if (trendChartInstance) {
+      trendChartInstance.destroy();
+      trendChartInstance = null;
+    }
+    canvas.style.display = 'none';
+    if (emptyTrendPlaceholder) emptyTrendPlaceholder.classList.remove('hidden');
+  } else {
+    canvas.style.display = 'block';
+    if (emptyTrendPlaceholder) emptyTrendPlaceholder.classList.add('hidden');
+  }
+
   const net = totalInc - totalExp;
   const netBadge = document.getElementById('trendNetBadge');
   if (netBadge) {
@@ -354,6 +368,10 @@ function renderTrendChart() {
       netBadge.className = 'hidden sm:inline-block text-[10px] font-semibold text-rose-600 bg-rose-50 dark:bg-rose-950/60 dark:text-rose-400 px-2 py-0.5 rounded-full border border-rose-200/60 dark:border-rose-800/60 transition-all';
       netBadge.textContent = `-${formatRupiah(Math.abs(net))} (Defisit)`;
     }
+  }
+
+  if (totalInc === 0 && totalExp === 0) {
+    return;
   }
 
   // Smooth Morphing: If chart already exists in the same theme, update data dynamically for a fluid liquid transition!
@@ -512,11 +530,4 @@ function renderTrendChart() {
     }
   });
   trendChartInstance._isDark = isDark;
-}
-
-function escapeHtml(text) {
-  if (!text) return '';
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
 }

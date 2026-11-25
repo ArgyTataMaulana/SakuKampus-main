@@ -38,7 +38,7 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(publicPath, 'login.html'));
 });
 
-app.get(['/', '/dashboard', '/chat', '/transactions', '/about'], (req, res) => {
+app.get(['/', '/dashboard', '/chat', '/history', '/transactions', '/about'], (req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });
 

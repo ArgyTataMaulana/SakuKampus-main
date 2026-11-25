@@ -5,12 +5,29 @@ import { authMiddleware } from '../middlewares/auth.js';
 
 export const transactionsRouter = express.Router();
 
+const MAX_TRANSACTION_AMOUNT = 100000000; // Rp 100 Juta
+
+function getLocalTodayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function isValidDateStr(dateStr) {
+  if (typeof dateStr !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
+  const parsed = new Date(`${dateStr}T00:00:00Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().startsWith(dateStr);
+}
+
 /**
  * GET /api/transactions
  * Retrieve transaction history with filtering & search (F-05, F-08)
  */
 transactionsRouter.get('/', authMiddleware, async (req, res) => {
   const { type, category_id, start_date, end_date, search, limit = 100 } = req.query;
+
+  if (start_date && end_date && start_date > end_date) {
+    return res.status(400).json({ error: 'Tanggal mulai tidak boleh lebih besar dari tanggal akhir.' });
+  }
 
   // Vercel instances do not share their local SQLite files. Read transaction
   // history from Supabase so the same account sees the same rows on every device.
@@ -75,8 +92,13 @@ transactionsRouter.post('/', authMiddleware, (req, res) => {
   const userId = req.user.id;
   const { amount, category_id, description, occurred_on } = req.body;
 
-  if (!amount || amount <= 0) {
-    return res.status(400).json({ error: 'Nominal transaksi harus lebih dari 0.' });
+  const numAmount = Number(amount);
+  if (!Number.isFinite(numAmount) || numAmount <= 0 || numAmount > MAX_TRANSACTION_AMOUNT) {
+    return res.status(400).json({ error: `Nominal transaksi harus antara Rp 1 dan Rp ${MAX_TRANSACTION_AMOUNT.toLocaleString('id-ID')}.` });
+  }
+
+  if (occurred_on && !isValidDateStr(occurred_on)) {
+    return res.status(400).json({ error: 'Format tanggal tidak valid (gunakan YYYY-MM-DD).' });
   }
 
   const category = db.prepare('SELECT id, name, type FROM categories WHERE id = ?').get(category_id);
@@ -91,10 +113,10 @@ transactionsRouter.post('/', authMiddleware, (req, res) => {
   `).run(
     userId,
     category.id,
-    Math.round(Number(amount)),
-    description ? description.trim() : `Transaksi ${category.name}`,
-    `Manual: ${category.name} ${amount}`,
-    occurred_on || new Date().toISOString().split('T')[0]
+    Math.round(numAmount),
+    description ? String(description).trim().slice(0, 200) : `Transaksi ${category.name}`,
+    `Manual: ${category.name} ${Math.round(numAmount)}`,
+    occurred_on || getLocalTodayStr()
   );
 
   const newTx = db.prepare(`
@@ -142,8 +164,13 @@ transactionsRouter.put('/:id', authMiddleware, (req, res) => {
     return res.status(404).json({ error: 'Transaksi tidak ditemukan atau Anda tidak memiliki akses.' });
   }
 
-  if (!amount || amount <= 0) {
-    return res.status(400).json({ error: 'Nominal transaksi harus lebih dari 0.' });
+  const numAmount = Number(amount);
+  if (!Number.isFinite(numAmount) || numAmount <= 0 || numAmount > MAX_TRANSACTION_AMOUNT) {
+    return res.status(400).json({ error: `Nominal transaksi harus antara Rp 1 dan Rp ${MAX_TRANSACTION_AMOUNT.toLocaleString('id-ID')}.` });
+  }
+
+  if (occurred_on && !isValidDateStr(occurred_on)) {
+    return res.status(400).json({ error: 'Format tanggal tidak valid (gunakan YYYY-MM-DD).' });
   }
 
   // Verify category exists
@@ -161,10 +188,10 @@ transactionsRouter.put('/:id', authMiddleware, (req, res) => {
         updated_at = CURRENT_TIMESTAMP
     WHERE id = ? AND user_id = ?
   `).run(
-    Math.round(Number(amount)),
+    Math.round(numAmount),
     category_id,
-    description ? description.trim() : 'Transaksi',
-    occurred_on || new Date().toISOString().split('T')[0],
+    description ? String(description).trim().slice(0, 200) : 'Transaksi',
+    occurred_on || getLocalTodayStr(),
     txId,
     userId
   );

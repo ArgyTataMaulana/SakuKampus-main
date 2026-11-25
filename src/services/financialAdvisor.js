@@ -65,7 +65,7 @@ export function isConsultationQuery(text) {
  */
 export function getUserFinancialContext(userId) {
   const now = new Date();
-  const currentYM = now.toISOString().slice(0, 7);
+  const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
   // Overall Balances
   const incTotal = db.prepare(`

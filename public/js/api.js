@@ -1,4 +1,11 @@
-// API Client for SakuKampus UMY
+// API Client & Core Utilities for SakuKampus UMY
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
 
 const api = {
   async get(url) {
