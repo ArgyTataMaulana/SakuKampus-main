@@ -8,7 +8,7 @@
   <script src="/js/tailwind-config.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
@@ -17,15 +17,15 @@
   <!-- Top bar with theme toggle -->
   <header class="w-full px-6 py-4 flex justify-between items-center max-w-6xl mx-auto relative z-10">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center shadow-sm shrink-0">
+      <div class="w-10 h-10 bg-bauhaus-blue text-white flex items-center justify-center border-2 border-bauhaus-dark shadow-[3px_3px_0px_0px_#121212] shrink-0">
         <i class="fa-solid fa-wallet text-base" aria-hidden="true"></i>
       </div>
       <div>
-        <span class="font-bold text-lg tracking-tight text-ink dark:text-nighttext">Saku<span class="text-brand-600 dark:text-brand-400">Kampus</span></span>
-        <span class="text-[10px] ml-1.5 px-2 py-0.5 font-medium rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">UMY</span>
+        <span class="font-extrabold text-xl tracking-tighter text-ink dark:text-nighttext uppercase">Saku<span class="text-bauhaus-blue dark:text-bauhaus-yellow">Kampus</span></span>
+        <span class="text-[10px] ml-1.5 px-2.5 py-0.5 font-black uppercase rounded-full bg-bauhaus-yellow text-bauhaus-dark border-1.5 border-bauhaus-dark shadow-[1px_1px_0px_#121212]">UMY</span>
       </div>
     </div>
-    <button id="themeToggleBtn" class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition" title="Toggle Tema" aria-label="Toggle tema gelap/terang">
+    <button id="themeToggleBtn" class="p-2.5 border-2 border-bauhaus-dark dark:border-night-border bg-white dark:bg-nightbg-card hover:bg-bauhaus-yellow dark:hover:bg-bauhaus-yellow hover:text-bauhaus-dark text-bauhaus-dark dark:text-nighttext shadow-[2px_2px_0px_0px_#121212] dark:shadow-[2px_2px_0px_0px_#F0C020] active:translate-x-[1px] active:translate-y-[1px] transition" title="Toggle Tema" aria-label="Toggle tema gelap/terang">
       <i class="fa-solid fa-moon dark:hidden" aria-hidden="true"></i>
       <i class="fa-solid fa-sun hidden dark:inline" aria-hidden="true"></i>
     </button>
@@ -35,31 +35,39 @@
   <main class="flex-1 flex items-center justify-center px-4 py-8 relative z-10">
     <div class="w-full max-w-md">
       <!-- Error notification banner (T8-2 Flow failure alerts) -->
-      <div id="errorAlert" class="hidden mb-4 p-4 rounded-xl border text-sm flex items-start gap-3">
+      <div id="errorAlert" class="hidden mb-4 p-4 border-2 border-bauhaus-dark text-sm flex items-start gap-3 shadow-[4px_4px_0px_#121212]">
         <i class="fa-solid fa-triangle-exclamation text-lg mt-0.5" aria-hidden="true"></i>
         <div class="flex-1">
-          <p id="errorTitle" class="font-semibold"></p>
+          <p id="errorTitle" class="font-bold uppercase tracking-tight"></p>
           <p id="errorDesc" class="text-xs mt-0.5 opacity-90"></p>
         </div>
       </div>
 
-      <div class="craft-card bg-white dark:bg-nightbg-card p-8 shadow-card">
+      <div class="craft-card bg-white dark:bg-nightbg-card p-8 shadow-card relative">
+        <!-- Bauhaus Asymmetric Geometric Header Accent -->
+        <div class="flex items-center justify-center gap-2 mb-6">
+          <span class="w-3.5 h-3.5 rounded-full bg-bauhaus-red border-1.5 border-bauhaus-dark shadow-[1px_1px_0px_#121212]" title="Circle"></span>
+          <span class="w-3.5 h-3.5 bg-bauhaus-blue border-1.5 border-bauhaus-dark shadow-[1px_1px_0px_#121212]" title="Square"></span>
+          <span class="w-0 h-0 border-l-[7px] border-l-transparent border-r-[7px] border-r-transparent border-b-[13px] border-b-bauhaus-yellow drop-shadow-[1px_1px_0px_#121212]" title="Triangle"></span>
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">BAUHAUS EDITION</span>
+        </div>
+
         <!-- Logo & Title -->
         <div class="text-center mb-8">
-          <div class="w-14 h-14 rounded-2xl bg-brand-600 text-white flex items-center justify-center mx-auto mb-4 shadow-sm text-2xl">
+          <div class="w-16 h-16 bg-bauhaus-blue text-white flex items-center justify-center mx-auto mb-4 border-2 border-bauhaus-dark shadow-[4px_4px_0px_0px_#121212] text-3xl">
             <i class="fa-solid fa-wallet" aria-hidden="true"></i>
           </div>
-          <span class="label-upper block mb-2 text-brand-600 dark:text-brand-400">Catat Keuangan Mahasiswa</span>
-          <h1 class="text-2xl font-bold tracking-tight text-ink dark:text-nighttext">Masuk ke SakuKampus</h1>
-          <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 font-sans">
-            Catat keuangan semudah chatting. Asisten cerdas keuangan mahasiswa UMY.
+          <span class="label-upper block mb-1 text-bauhaus-blue dark:text-bauhaus-yellow font-extrabold">Catat Keuangan Mahasiswa</span>
+          <h1 class="text-3xl font-black tracking-tight text-ink dark:text-nighttext uppercase">Masuk ke SakuKampus</h1>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-2 font-medium">
+            Catat transaksi semudah chatting. Sistem asisten cerdas keuangan mahasiswa UMY.
           </p>
         </div>
 
         <!-- Google OAuth 2.0 Button (F-01) -->
         <div class="space-y-3.5">
-          <a href="/auth/google" class="w-full flex items-center justify-center gap-3 px-5 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 font-semibold text-slate-800 dark:text-slate-100 shadow-sm transition active:scale-[0.99]">
-            <svg class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+          <a href="/auth/google" class="w-full flex items-center justify-center gap-3 px-5 py-3.5 border-2 border-bauhaus-dark dark:border-night-border bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide text-xs shadow-[3px_3px_0px_0px_#121212] dark:shadow-[3px_3px_0px_0px_#F0C020] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition">
+            <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
               <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
               <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
               <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
@@ -69,37 +77,37 @@
           </a>
 
           <div class="relative flex items-center justify-center my-4">
-            <div class="border-t border-slate-200 dark:border-slate-700 w-full"></div>
-            <span class="bg-white dark:bg-nightbg-card px-3 text-xs text-slate-400 font-medium absolute">ATAU</span>
+            <div class="border-t-2 border-bauhaus-dark dark:border-night-border w-full"></div>
+            <span class="bg-white dark:bg-nightbg-card px-3 text-[10px] font-black uppercase tracking-widest text-slate-500 absolute">ATAU</span>
           </div>
 
           <!-- Demo Quick Login Button (Immediate evaluation without GCP credentials) -->
-          <button id="btnDemoLogin" class="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-sm transition active:scale-[0.99]">
+          <button id="btnDemoLogin" class="btn-block-primary w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-bauhaus-blue hover:bg-bauhaus-blue-dark text-white font-extrabold text-xs uppercase tracking-wider shadow-[4px_4px_0px_0px_#121212] transition">
             <i class="fa-solid fa-play text-xs" aria-hidden="true"></i>
             Masuk Mode Demo (1-Klik)
             <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
           </button>
-          <p class="text-center text-xs text-slate-500 dark:text-slate-400">
+          <p class="text-center text-[11px] text-slate-500 dark:text-slate-400 font-medium">
             *Mode demo menggunakan akun mahasiswa uji coba untuk penilaian & presentasi langsung.
           </p>
         </div>
 
         <!-- Features summary badges -->
-        <div class="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700 grid grid-cols-2 gap-3 text-xs text-slate-600 dark:text-slate-300">
+        <div class="mt-8 pt-6 border-t-2 border-bauhaus-dark dark:border-night-border grid grid-cols-2 gap-3 text-xs font-semibold text-slate-700 dark:text-slate-300">
           <div class="flex items-center gap-2">
-            <i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400" aria-hidden="true"></i>
+            <span class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] shrink-0 font-bold">✓</span>
             <span>Catat Chat & Suara</span>
           </div>
           <div class="flex items-center gap-2">
-            <i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400" aria-hidden="true"></i>
+            <span class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] shrink-0 font-bold">✓</span>
             <span>Kategori Otomatis</span>
           </div>
           <div class="flex items-center gap-2">
-            <i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400" aria-hidden="true"></i>
+            <span class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] shrink-0 font-bold">✓</span>
             <span>Grafik Keuangan</span>
           </div>
           <div class="flex items-center gap-2">
-            <i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400" aria-hidden="true"></i>
+            <span class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] shrink-0 font-bold">✓</span>
             <span>Privasi Data Aman <span class="feat-chip ml-1">F-08</span></span>
           </div>
         </div>

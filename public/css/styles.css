@@ -1,168 +1,212 @@
-/* SakuKampus UMY - Hokkaido Soft Clean Blue & White Minimalist Design */
-/* Aesthetic: Japanese Clean Poster, Dominant Pure White, Soft Pastel Sky Blue, Vibrant Cobalt Accents */
+/* ==========================================================================
+   SakuKampus UMY - Bauhaus Modernist UI Design System
+   Aesthetics: Walter Gropius, Constructivism, Primary Colors, Pure Geometry,
+   Hard Offset Shadows, Mechanical Tactile Feedback, Architectural Grid
+   ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
 /* ─── Design Tokens ─── */
 :root {
-  --primary:        #2563EB; /* Hokkaido poster striking royal cobalt blue */
-  --primary-hover:  #1D4ED8;
-  --primary-light:  #F0F7FF; /* Ultra soft ice blue */
-  --primary-subtle: #E0F2FE; /* Sky mist */
-  --sky-vivid:      #38BDF8;
-  --sky-soft:       #BAE6FD;
-  --sky-ice:        #F0F7FF;
-  --konbini-orange: #FB923C; /* Warm accent from poster store roof */
-  --emerald:        #059669;
-  --emerald-hover:  #047857;
-  --emerald-light:  #ECFDF5;
+  /* Bauhaus Primary Color Palette */
+  --bauhaus-red:     #D02020; /* Primary Red (Rot) */
+  --bauhaus-red-dark:#B01818;
+  --bauhaus-blue:    #1040C0; /* Primary Ultramarine Blue (Blau) */
+  --bauhaus-blue-dark:#0C3299;
+  --bauhaus-yellow:  #F0C020; /* Primary Chrome Yellow (Gelb) */
+  --bauhaus-dark:    #121212; /* Deep Mechanical Ink */
+  --bauhaus-cream:   #F4F1EA; /* Warm Architectural Canvas */
+  --bauhaus-white:   #FFFFFF;
+  --bauhaus-gray:    #E2DFD7;
+
+  /* Aliases for functional styling */
+  --primary:         var(--bauhaus-blue);
+  --primary-hover:   var(--bauhaus-blue-dark);
+  --primary-light:   #EEF2FF;
+  --primary-subtle:  #E0E7FF;
   
-  --slate-50:       #F8FAFC; /* Crisp snow white background */
-  --slate-100:      #F1F5F9;
-  --slate-200:      #E2EEF9; /* Subtle sky-tinted white border */
-  --slate-300:      #CBD5E1;
-  --slate-400:      #94A3B8;
-  --slate-500:      #64748B;
-  --slate-600:      #475569;
-  --slate-700:      #334155;
-  --slate-800:      #1E293B;
-  --slate-900:      #0F172A; /* Deep slate navy typography */
+  --emerald:         #059669; /* Functional Income */
+  --emerald-hover:   #047857;
+  --emerald-light:   #ECFDF5;
+  --danger:          var(--bauhaus-red);
+  --danger-hover:    var(--bauhaus-red-dark);
   
-  --radius-card:    16px;
-  --radius-btn:     10px;
-  --shadow-sm:      0 1px 2px 0 rgba(37, 99, 235, 0.05);
-  --shadow-card:    0 1px 3px 0 rgba(37, 99, 235, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
-  --shadow-hover:   0 8px 20px -3px rgba(37, 99, 235, 0.08), 0 3px 6px -2px rgba(0, 0, 0, 0.03);
-  --transition:     180ms cubic-bezier(0.4, 0, 0.2, 1);
+  --slate-50:        #F4F1EA; /* Canvas Background */
+  --slate-100:       #EAE6DC;
+  --slate-200:       #D9D4C7;
+  --slate-300:       #B8B2A2;
+  --slate-400:       #8A8475;
+  --slate-500:       #5C574C;
+  --slate-600:       #3E3A33;
+  --slate-700:       #2A2722;
+  --slate-800:       #1C1B18;
+  --slate-900:       #121212; /* Ink */
   
-  /* Modern Clean Slate Dark Mode */
-  --night-bg:       #0B132B;
-  --night-card:     #111C3A;
-  --night-card2:    #1C2B54;
-  --night-border:   #1E2E5D;
-  --night-text:     #F0F7FF;
-  --night-sub:      #93C5FD;
-  --night-accent:   #38BDF8;
+  --radius-card:     0px;     /* Bauhaus: Strict right angles */
+  --radius-btn:      0px;
+  --radius-pill:     9999px;  /* Bauhaus: Pure geometric circle/pill */
+  
+  /* Hard Mechanical Offset Shadows */
+  --shadow-hard-sm:  2px 2px 0px 0px #121212;
+  --shadow-hard:     4px 4px 0px 0px #121212;
+  --shadow-hard-lg:  6px 6px 0px 0px #121212;
+  --shadow-hard-xl:  8px 8px 0px 0px #121212;
+  --shadow-sm:       var(--shadow-hard-sm);
+  --shadow-card:     var(--shadow-hard);
+  --shadow-hover:    var(--shadow-hard-lg);
+  
+  --transition:      100ms cubic-bezier(0, 0, 0.2, 1); /* Snappy tactile speed */
+  
+  /* Dark Mode Palette - Constructivist Black & Neon Yellow/Blue/White */
+  --night-bg:        #121212;
+  --night-card:      #1C1C22;
+  --night-card2:     #26262E;
+  --night-border:    #F4F1EA;
+  --night-text:      #F4F1EA;
+  --night-sub:       #D9D4C7;
+  --night-accent:    #F0C020;
 }
 
 /* ─── Base ─── */
-html { scroll-behavior: smooth; }
+html { 
+  scroll-behavior: smooth; 
+}
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  letter-spacing: -0.011em;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.015em;
   color: var(--slate-900);
-  background: var(--slate-50);
+  background-color: var(--slate-50);
+  /* Architectural Dot Grid */
+  background-image: radial-gradient(rgba(18, 18, 18, 0.10) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
 }
 
 .dark body {
   color: var(--night-text);
-  background: var(--night-bg);
+  background-color: var(--night-bg);
+  background-image: radial-gradient(rgba(240, 192, 32, 0.12) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
 }
 
-/* ─── Typography & Fallbacks ─── */
+/* ─── Typography & Headlines ─── */
 .font-pixel, .font-label {
-  font-family: 'Inter', sans-serif !important;
-  letter-spacing: normal !important;
+  font-family: 'Outfit', sans-serif !important;
 }
 
 h1, h2, h3, #topbarTitle {
-  font-family: 'Inter', sans-serif !important;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
 table, input, select, textarea, .tabular-nums {
-  font-family: 'Inter', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-variant-numeric: tabular-nums;
 }
 
-/* ─── Modern Minimalist Cards (Dominant Pure White) ─── */
+/* ─── Bauhaus Constructivist Cards ─── */
 .craft-card {
-  border: 1px solid var(--slate-200);
+  border: 2px solid var(--bauhaus-dark);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-hard);
   background-color: #FFFFFF;
-  transition: box-shadow var(--transition), border-color var(--transition);
+  transition: transform var(--transition), box-shadow var(--transition);
 }
 
 .craft-card:hover {
-  box-shadow: var(--shadow-hover);
-  border-color: var(--sky-soft);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-hard-lg);
 }
 
 .dark .craft-card {
-  border-color: var(--night-border) !important;
+  border: 2px solid var(--night-border) !important;
   background-color: var(--night-card) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  box-shadow: 4px 4px 0px 0px var(--bauhaus-yellow) !important;
 }
 
-/* ─── Modern Soft Clean Buttons ─── */
+.dark .craft-card:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0px 0px var(--bauhaus-yellow) !important;
+}
+
+/* ─── Bauhaus Mechanical Buttons ─── */
 .btn-block {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
+  padding: 0.55rem 1.15rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
   font-size: 0.8125rem;
-  border-radius: var(--radius-btn);
-  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 0px;
+  border: 2px solid var(--bauhaus-dark);
   cursor: pointer;
+  box-shadow: var(--shadow-hard-sm);
   transition: all var(--transition);
 }
 
 .btn-block-primary {
-  background: var(--primary);
+  background: var(--bauhaus-blue);
   color: #FFFFFF;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  border: 2px solid var(--bauhaus-dark);
+  box-shadow: var(--shadow-hard-sm);
 }
 .btn-block-primary:hover {
-  background: var(--primary-hover);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  background: var(--bauhaus-blue-dark);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-hard);
 }
 .btn-block-primary:active {
-  transform: scale(0.98);
+  transform: translate(2px, 2px);
+  box-shadow: none;
 }
 
 .btn-block-outline {
   background: #FFFFFF;
-  color: #1E40AF;
-  border: 1px solid var(--slate-200);
-  box-shadow: var(--shadow-sm);
-  border-radius: var(--radius-btn);
-  transition: all var(--transition);
+  color: var(--bauhaus-dark);
+  border: 2px solid var(--bauhaus-dark);
+  box-shadow: var(--shadow-hard-sm);
 }
 .dark .btn-block-outline {
   background: var(--night-card);
   border-color: var(--night-border);
-  color: var(--sky-soft);
+  color: var(--night-text);
+  box-shadow: 2px 2px 0px 0px var(--bauhaus-yellow);
 }
 .btn-block-outline:hover {
-  border-color: var(--sky-vivid);
-  color: var(--primary);
-  background: var(--primary-light);
+  background: var(--bauhaus-yellow);
+  color: var(--bauhaus-dark);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-hard);
 }
 .dark .btn-block-outline:hover {
-  border-color: var(--night-accent);
-  color: var(--night-accent);
-  background: rgba(56, 189, 248, 0.12);
+  background: var(--bauhaus-yellow);
+  color: var(--bauhaus-dark);
+  box-shadow: 4px 4px 0px 0px var(--night-border);
 }
 .btn-block-outline:active {
-  transform: scale(0.98);
+  transform: translate(2px, 2px);
+  box-shadow: none;
 }
 
 .btn-block-danger {
-  background: #DC2626;
+  background: var(--bauhaus-red);
   color: #FFFFFF;
-  box-shadow: var(--shadow-sm);
+  border: 2px solid var(--bauhaus-dark);
+  box-shadow: var(--shadow-hard-sm);
 }
 .btn-block-danger:hover {
-  background: #B91C1C;
+  background: var(--bauhaus-red-dark);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-hard);
 }
 .btn-block-danger:active {
-  transform: scale(0.98);
+  transform: translate(2px, 2px);
+  box-shadow: none;
 }
 
 /* Primary buttons override */
@@ -171,111 +215,164 @@ a.bg-brand-600,
 #btnDemoLogin,
 #btnChatSend,
 #floatingChatToggleBtn {
-  background-color: var(--primary) !important;
+  background-color: var(--bauhaus-blue) !important;
   color: #FFFFFF !important;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25) !important;
-  border: none !important;
+  border: 2px solid var(--bauhaus-dark) !important;
+  border-radius: 0px !important;
+  box-shadow: var(--shadow-hard-sm) !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
   transition: all var(--transition) !important;
 }
+
 button.bg-brand-600:hover,
 a.bg-brand-600:hover,
 #btnDemoLogin:hover,
-#btnChatSend:hover,
-#floatingChatToggleBtn:hover {
-  background-color: var(--primary-hover) !important;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+#btnChatSend:hover {
+  background-color: var(--bauhaus-blue-dark) !important;
+  transform: translate(-1px, -1px) !important;
+  box-shadow: var(--shadow-hard) !important;
 }
+
 button.bg-brand-600:active,
 a.bg-brand-600:active,
 #btnDemoLogin:active,
-#btnChatSend:active,
-#floatingChatToggleBtn:active {
-  transform: scale(0.97) !important;
+#btnChatSend:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: none !important;
 }
 
-/* ─── Navigation Item ─── */
+/* Floating Chat Button (Pure geometric pill/circle in Bauhaus Yellow or Blue) */
+#floatingChatToggleBtn {
+  border-radius: 9999px !important;
+  background-color: var(--bauhaus-yellow) !important;
+  color: var(--bauhaus-dark) !important;
+  box-shadow: var(--shadow-hard) !important;
+}
+#floatingChatToggleBtn:hover {
+  transform: translate(-2px, -2px) scale(1.03) !important;
+  box-shadow: var(--shadow-hard-lg) !important;
+}
+#floatingChatToggleBtn:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: none !important;
+}
+
+/* ─── Navigation Item (Bauhaus Asymmetric Grid Item) ─── */
 .nav-item {
   transition: all var(--transition);
-  border-radius: 10px;
+  border-radius: 0px;
+  border: 2px solid transparent;
+}
+
+.nav-item:hover {
+  border-color: var(--bauhaus-dark);
+  background-color: var(--bauhaus-yellow);
+  color: var(--bauhaus-dark);
 }
 
 .nav-item.active,
 .nav-item[class*="bg-brand-50"] {
-  background-color: var(--primary-light) !important;
-  color: var(--primary) !important;
-  border: 1px solid var(--sky-soft);
-  font-weight: 600;
+  background-color: var(--bauhaus-yellow) !important;
+  color: var(--bauhaus-dark) !important;
+  border: 2px solid var(--bauhaus-dark) !important;
+  box-shadow: var(--shadow-hard-sm) !important;
+  font-weight: 800 !important;
 }
 
 .dark .nav-item.active,
 .dark .nav-item[class*="bg-brand-50"] {
-  background-color: rgba(56, 189, 248, 0.12) !important;
-  color: var(--night-accent) !important;
-  border-color: rgba(56, 189, 248, 0.25);
+  background-color: var(--bauhaus-yellow) !important;
+  color: var(--bauhaus-dark) !important;
+  border-color: var(--night-border) !important;
+  box-shadow: 2px 2px 0px 0px #FFFFFF !important;
 }
 
-/* ─── Soft Clean Quota Bar (Sky Gradient) ─── */
+/* ─── Bauhaus Quota Bar Track ─── */
 .quota-bar-track {
   width: 100%;
-  height: 6px;
-  background: var(--slate-200);
-  border-radius: 9999px;
+  height: 10px;
+  background: #FFFFFF;
+  border: 2px solid var(--bauhaus-dark);
+  border-radius: 0px;
   overflow: hidden;
+  box-shadow: 1px 1px 0px #121212;
 }
 
 .dark .quota-bar-track {
   background: var(--night-card2);
+  border-color: var(--night-border);
 }
 
 #sidebarQuotaBar {
-  height: 6px;
-  border-radius: 9999px;
-  background: linear-gradient(90deg, #38BDF8 0%, #2563EB 100%) !important;
-  transition: width 300ms ease;
+  height: 100%;
+  border-radius: 0px;
+  background: var(--bauhaus-blue) !important;
+  transition: width 200ms ease;
 }
 
-/* ─── Chat Bubbles (Airy White & Soft Ice Blue) ─── */
+/* ─── Chat Bubbles (Bauhaus Geometric Panels) ─── */
 .chat-bubble-bot {
-  border-radius: 16px;
-  border-bottom-left-radius: 4px;
+  border-radius: 0px !important;
+  border: 2px solid var(--bauhaus-dark) !important;
+  box-shadow: 3px 3px 0px 0px var(--bauhaus-dark) !important;
+}
+
+.dark .chat-bubble-bot {
+  border-color: var(--night-border) !important;
+  box-shadow: 3px 3px 0px 0px var(--bauhaus-yellow) !important;
 }
 
 .chat-bubble-user {
-  border-radius: 16px;
-  border-bottom-right-radius: 4px;
-  background-color: var(--primary) !important;
+  border-radius: 0px !important;
+  border: 2px solid var(--bauhaus-dark) !important;
+  box-shadow: 3px 3px 0px 0px var(--bauhaus-dark) !important;
+  background-color: var(--bauhaus-blue) !important;
   color: #FFFFFF !important;
 }
 
-/* ─── Clean Suggestion Chips ─── */
+.dark .chat-bubble-user {
+  border-color: var(--night-border) !important;
+  box-shadow: 3px 3px 0px 0px #FFFFFF !important;
+}
+
+/* ─── Suggestion Chips (Pure Bauhaus Geometric Pills) ─── */
 .craft-chip {
-  font-family: 'Inter', sans-serif !important;
-  font-size: 12px !important;
-  font-weight: 500;
-  border: 1px solid var(--slate-200) !important;
-  border-radius: 9999px;
-  padding: 4px 12px;
-  background: #FFFFFF;
-  color: #1E3A8A;
-  box-shadow: var(--shadow-sm);
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.03em;
+  border: 2px solid var(--bauhaus-dark) !important;
+  border-radius: 9999px !important;
+  padding: 5px 14px !important;
+  background: #FFFFFF !important;
+  color: var(--bauhaus-dark) !important;
+  box-shadow: 2px 2px 0px 0px var(--bauhaus-dark) !important;
   transition: all var(--transition);
   cursor: pointer;
 }
 .dark .craft-chip {
   border-color: var(--night-border) !important;
-  background: var(--night-card2);
-  color: var(--night-text);
+  background: var(--night-card2) !important;
+  color: var(--night-text) !important;
+  box-shadow: 2px 2px 0px 0px var(--bauhaus-yellow) !important;
 }
 .craft-chip:hover {
-  border-color: var(--sky-vivid) !important;
-  color: var(--primary);
-  background: var(--primary-light);
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.12);
+  background: var(--bauhaus-yellow) !important;
+  color: var(--bauhaus-dark) !important;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px 0px var(--bauhaus-dark) !important;
 }
 .dark .craft-chip:hover {
-  border-color: var(--night-accent) !important;
-  color: var(--night-accent);
-  background: rgba(56, 189, 248, 0.14);
+  background: var(--bauhaus-yellow) !important;
+  color: var(--bauhaus-dark) !important;
+  box-shadow: 3px 3px 0px 0px var(--night-border) !important;
+}
+.craft-chip:active {
+  transform: translate(1px, 1px);
+  box-shadow: none !important;
 }
 
 /* ─── Feature Label Chips (F-01 .. F-10) ─── */
@@ -283,43 +380,48 @@ a.bg-brand-600:active,
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  padding: 1px 7px;
-  font-family: 'Inter', sans-serif;
+  padding: 2px 8px;
+  font-family: 'Outfit', sans-serif;
   font-size: 10px;
-  font-weight: 600;
-  border-radius: 6px;
-  background: var(--primary-light);
-  color: var(--primary);
-  border: 1px solid var(--sky-soft);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  background: var(--bauhaus-yellow);
+  color: var(--bauhaus-dark);
+  border: 1.5px solid var(--bauhaus-dark);
+  box-shadow: 1px 1px 0px 0px var(--bauhaus-dark);
 }
 .dark .feat-chip {
-  background: rgba(56, 189, 248, 0.12);
-  color: var(--night-accent);
-  border-color: rgba(56, 189, 248, 0.25);
+  background: var(--bauhaus-yellow);
+  color: var(--bauhaus-dark);
+  border-color: var(--night-border);
+  box-shadow: 1px 1px 0px 0px #FFFFFF;
 }
 
 /* ─── Scrollbar ─── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
-.dark ::-webkit-scrollbar-thumb { background: #334155; }
-::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--slate-100); border-left: 1px solid var(--bauhaus-dark); }
+::-webkit-scrollbar-thumb { background: var(--bauhaus-dark); border-radius: 0px; }
+.dark ::-webkit-scrollbar-track { background: var(--night-card); border-left: 1px solid var(--night-border); }
+.dark ::-webkit-scrollbar-thumb { background: var(--bauhaus-yellow); }
 
 /* ─── Microphone Active Pulse ─── */
 @keyframes mic-pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); }
-  70%  { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+  0%   { box-shadow: 0 0 0 0 rgba(208, 32, 32, 0.7); }
+  70%  { box-shadow: 0 0 0 10px rgba(208, 32, 32, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(208, 32, 32, 0); }
 }
 .mic-active {
-  animation: mic-pulse 1.4s infinite;
-  background-color: #DC2626 !important;
+  animation: mic-pulse 1.2s infinite;
+  background-color: var(--bauhaus-red) !important;
   color: #FFFFFF !important;
+  border-color: var(--bauhaus-dark) !important;
 }
 
-/* ─── Clean Animations ─── */
+/* ─── Snappy Animations ─── */
 .fade-in {
-  animation: fadeIn 160ms ease-out;
+  animation: fadeIn 120ms ease-out;
 }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
@@ -327,19 +429,22 @@ a.bg-brand-600:active,
 }
 
 @keyframes popUp {
-  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  from { opacity: 0; transform: scale(0.97) translateY(4px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 .animate-popup {
-  animation: popUp 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: popUp 140ms ease-out;
 }
 
 @keyframes toastSlide {
-  from { opacity: 0; transform: translateX(16px); }
+  from { opacity: 0; transform: translateX(20px); }
   to   { opacity: 1; transform: translateX(0); }
 }
 .toast-item {
-  animation: toastSlide 180ms ease-out;
+  animation: toastSlide 140ms ease-out;
+  border: 2px solid var(--bauhaus-dark) !important;
+  border-radius: 0px !important;
+  box-shadow: var(--shadow-hard) !important;
 }
 
 /* ─── Reduced Motion ─── */
@@ -353,52 +458,78 @@ a.bg-brand-600:active,
 
 /* ─── Focus ─── */
 :focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--bauhaus-dark);
   outline-offset: 2px;
-  border-radius: 8px;
+  border-radius: 0px;
+}
+.dark :focus-visible {
+  outline: 2px solid var(--bauhaus-yellow);
 }
 
-/* ─── Login Page Hokkaido Sky Gradient (Soft Pastel Sky Fading to Pure Snow White) ─── */
+/* ─── Login Page Bauhaus Constructivist Poster Background ─── */
 .login-bg {
-  background: linear-gradient(180deg, #BAE6FD 0%, #E0F2FE 18%, #F0F7FF 42%, #FFFFFF 75%, #F8FAFC 100%);
+  background-color: var(--slate-50);
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(208, 32, 32, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(16, 64, 192, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(240, 192, 32, 0.06) 0%, transparent 50%),
+    radial-gradient(rgba(18, 18, 18, 0.12) 1.5px, transparent 1.5px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 24px 24px;
   min-height: 100vh;
 }
 .dark .login-bg {
-  background: linear-gradient(180deg, #070D1E 0%, #0B132B 50%, #111C3A 100%);
+  background-color: #121212;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(208, 32, 32, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(16, 64, 192, 0.15) 0%, transparent 40%),
+    radial-gradient(rgba(240, 192, 32, 0.15) 1.5px, transparent 1.5px);
+  background-size: 100% 100%, 100% 100%, 24px 24px;
 }
 
-/* ─── SakuBot Avatar (Pastel Sky + Cobalt Gradient) ─── */
+/* ─── SakuBot Avatar (Bauhaus Primary Color Geometric Emblem) ─── */
 .sakubot-avatar {
   width: 36px;
   height: 36px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #38BDF8 0%, #2563EB 100%);
+  border-radius: 0px;
+  border: 2px solid var(--bauhaus-dark);
+  background: var(--bauhaus-blue);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-size: 15px;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+  box-shadow: 2px 2px 0px 0px var(--bauhaus-dark);
+}
+.dark .sakubot-avatar {
+  border-color: var(--night-border);
+  background: var(--bauhaus-yellow);
+  color: var(--bauhaus-dark);
+  box-shadow: 2px 2px 0px 0px #FFFFFF;
 }
 
-/* ─── Segmented Pill Toggle ─── */
+/* ─── Segmented Pill Toggle (Bauhaus Sharp Segmented Block) ─── */
 .segment-pill {
   display: flex;
   align-items: center;
-  padding: 3px;
-  background: #F1F5F9;
-  border: 1px solid var(--slate-200);
-  border-radius: 10px;
+  padding: 2px;
+  background: #FFFFFF;
+  border: 2px solid var(--bauhaus-dark);
+  border-radius: 0px;
+  box-shadow: var(--shadow-hard-sm);
 }
 .dark .segment-pill {
   background: var(--night-card2);
   border-color: var(--night-border);
+  box-shadow: 2px 2px 0px 0px var(--bauhaus-yellow);
 }
 .segment-pill button {
-  padding: 4px 12px;
-  border-radius: 7px;
+  padding: 5px 14px;
+  border-radius: 0px;
   font-size: 12px;
-  font-weight: 500;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   transition: all var(--transition);
   border: none;
   cursor: pointer;
@@ -409,43 +540,58 @@ a.bg-brand-600:active,
   color: var(--slate-400);
 }
 .segment-pill button.active {
-  background: #FFFFFF;
-  color: var(--primary);
-  font-weight: 600;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.1);
+  background: var(--bauhaus-yellow);
+  color: var(--bauhaus-dark);
+  font-weight: 800;
+  border: 1.5px solid var(--bauhaus-dark);
 }
 .dark .segment-pill button.active {
-  background: var(--night-card);
-  color: var(--night-accent);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  background: var(--bauhaus-yellow);
+  color: var(--bauhaus-dark);
+  border: 1.5px solid var(--night-border);
 }
 
 /* ─── Table Minimal Rows ─── */
+.zebra-table thead th {
+  font-family: 'Outfit', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 800;
+  background: var(--slate-100);
+  border-bottom: 2px solid var(--bauhaus-dark);
+}
+.dark .zebra-table thead th {
+  background: var(--night-card2);
+  border-bottom: 2px solid var(--night-border);
+}
 .zebra-table tbody tr {
+  border-bottom: 1px solid var(--slate-200);
   transition: background-color var(--transition);
 }
 .zebra-table tbody tr:hover {
-  background-color: rgba(240, 247, 255, 0.7);
+  background-color: var(--primary-light);
 }
 .dark .zebra-table tbody tr:hover {
-  background-color: rgba(28, 43, 84, 0.4);
+  background-color: rgba(240, 192, 32, 0.08);
 }
 
 /* ─── Party Card (Team Member) ─── */
 .party-card {
-  border: 1px solid var(--slate-200);
-  border-radius: 14px;
+  border: 2px solid var(--bauhaus-dark);
+  border-radius: 0px;
   padding: 18px;
   background: #FFFFFF;
-  transition: box-shadow var(--transition), border-color var(--transition);
+  box-shadow: var(--shadow-hard);
+  transition: transform var(--transition), box-shadow var(--transition);
 }
 .party-card:hover {
-  box-shadow: var(--shadow-hover);
-  border-color: var(--sky-soft);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-hard-lg);
 }
 .dark .party-card {
   background: var(--night-card);
   border-color: var(--night-border);
+  box-shadow: 4px 4px 0px 0px var(--bauhaus-yellow);
 }
 
 /* ─── Gate / Milestone Step ─── */
@@ -453,7 +599,7 @@ a.bg-brand-600:active,
   position: relative;
   padding-left: 28px;
   padding-bottom: 24px;
-  border-left: 2px solid var(--slate-200);
+  border-left: 2px solid var(--bauhaus-dark);
 }
 .dark .gate-step {
   border-left-color: var(--night-border);
@@ -461,53 +607,58 @@ a.bg-brand-600:active,
 .gate-step::before {
   content: '';
   position: absolute;
-  left: -6px;
+  left: -7px;
   top: 4px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--slate-200);
+  width: 12px;
+  height: 12px;
+  border-radius: 0px; /* Bauhaus square node */
+  border: 2px solid var(--bauhaus-dark);
+  background: #FFFFFF;
 }
 .gate-step.completed::before {
-  background: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  background: var(--bauhaus-blue);
+  box-shadow: 1px 1px 0px var(--bauhaus-dark);
 }
 .gate-step.current::before {
-  background: var(--sky-vivid);
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+  background: var(--bauhaus-yellow);
+  box-shadow: 1px 1px 0px var(--bauhaus-dark);
 }
 .dark .gate-step::before {
-  background: var(--night-border);
+  border-color: var(--night-border);
+  background: var(--night-card);
 }
 .dark .gate-step.completed::before {
-  background: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+  background: var(--bauhaus-yellow);
 }
 .dark .gate-step.current::before {
-  background: var(--night-accent);
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+  background: var(--bauhaus-red);
 }
 .gate-step:last-child {
   border-left-color: transparent;
 }
 
-/* ─── Minimalist Badges ─── */
+/* ─── Minimalist Bauhaus Badges ─── */
 .badge-sand {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: 0px;
+  font-family: 'Outfit', sans-serif;
   font-size: 11px;
-  font-weight: 500;
-  background: var(--primary-light);
-  color: var(--primary);
-  border: 1px solid var(--slate-200);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #FFFFFF;
+  color: var(--bauhaus-dark);
+  border: 1.5px solid var(--bauhaus-dark);
+  box-shadow: 1px 1px 0px var(--bauhaus-dark);
 }
 .dark .badge-sand {
   background: var(--night-card2);
-  color: var(--sky-soft);
+  color: var(--night-text);
   border-color: var(--night-border);
+  box-shadow: 1px 1px 0px var(--bauhaus-yellow);
 }
 
 .badge-dirt {
@@ -515,33 +666,96 @@ a.bg-brand-600:active,
   align-items: center;
   gap: 4px;
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: 0px;
+  font-family: 'Outfit', sans-serif;
   font-size: 11px;
-  font-weight: 500;
-  background: var(--primary-subtle);
-  color: #1D4ED8;
-  border: 1px solid var(--sky-soft);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--bauhaus-yellow);
+  color: var(--bauhaus-dark);
+  border: 1.5px solid var(--bauhaus-dark);
+  box-shadow: 1px 1px 0px var(--bauhaus-dark);
 }
 .dark .badge-dirt {
-  background: rgba(56, 189, 248, 0.12);
-  color: var(--night-accent);
-  border-color: rgba(56, 189, 248, 0.25);
+  background: var(--bauhaus-yellow);
+  color: var(--bauhaus-dark);
+  border-color: var(--night-border);
+  box-shadow: 1px 1px 0px #FFFFFF;
+}
+
+.badge-accent {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 0px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--bauhaus-blue);
+  color: #FFFFFF;
+  border: 1.5px solid var(--bauhaus-dark);
+  box-shadow: 1px 1px 0px var(--bauhaus-dark);
+}
+.dark .badge-accent {
+  background: var(--bauhaus-blue);
+  color: #FFFFFF;
+  border-color: var(--night-border);
+  box-shadow: 1px 1px 0px var(--bauhaus-yellow);
 }
 
 /* ─── Uppercase Label ─── */
 .label-upper {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 11px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--slate-500);
-  font-weight: 600;
+  font-weight: 800;
 }
 .dark .label-upper {
-  color: var(--sky-soft) !important;
+  color: var(--night-sub) !important;
 }
 
-/* ─── Clean Text Contrast Overrides ─── */
+/* Form Inputs Bauhaus Border */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+  border: 2px solid var(--bauhaus-dark) !important;
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0px 0px var(--bauhaus-dark) !important;
+  font-family: 'Outfit', sans-serif !important;
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px 0px var(--bauhaus-blue) !important;
+  border-color: var(--bauhaus-blue) !important;
+}
+.dark input[type="text"],
+.dark input[type="number"],
+.dark input[type="date"],
+.dark select,
+.dark textarea {
+  border-color: var(--night-border) !important;
+  background-color: var(--night-card2) !important;
+  color: var(--night-text) !important;
+  box-shadow: 2px 2px 0px 0px var(--bauhaus-yellow) !important;
+}
+.dark input:focus, .dark select:focus, .dark textarea:focus {
+  border-color: var(--bauhaus-yellow) !important;
+  box-shadow: 3px 3px 0px 0px #FFFFFF !important;
+}
+
+/* Clean Text Contrast Overrides */
 .dark [class*="text-nighttext/30"],
 .dark [class*="text-nighttext/40"],
 .dark [class*="text-nighttext/50"],
@@ -552,23 +766,23 @@ a.bg-brand-600:active,
 .dark [class*="text-ink/50"],
 .dark [class*="text-ink/60"],
 .dark [class*="text-ink/70"] {
-  color: #94A3B8 !important;
+  color: #A3A3A3 !important;
 }
 
 [class*="text-ink/30"],
 [class*="text-ink/40"],
 [class*="text-ink/50"] {
-  color: #64748B !important;
+  color: #525252 !important;
 }
 
 .dark [class*="border-[#3a3229]"],
 .dark [class*="border-sand-dark"] {
-  border-color: #1E2E5D !important;
+  border-color: var(--night-border) !important;
 }
 
 .dark [class*="divide-[#3a3229]"] > :not([hidden]) ~ :not([hidden]),
 .dark [class*="divide-sand-dark"] > :not([hidden]) ~ :not([hidden]) {
-  border-color: #1E2E5D !important;
+  border-color: var(--night-border) !important;
 }
 
 .pb-safe {
