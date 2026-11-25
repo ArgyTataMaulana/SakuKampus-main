@@ -1,5 +1,6 @@
 import express from 'express';
 import { db } from '../config/database.js';
+import { supabase } from '../config/supabase.js';
 import { authMiddleware } from '../middlewares/auth.js';
 
 export const transactionsRouter = express.Router();
@@ -8,49 +9,62 @@ export const transactionsRouter = express.Router();
  * GET /api/transactions
  * Retrieve transaction history with filtering & search (F-05, F-08)
  */
-transactionsRouter.get('/', authMiddleware, (req, res) => {
-  const userId = req.user.id;
+transactionsRouter.get('/', authMiddleware, async (req, res) => {
   const { type, category_id, start_date, end_date, search, limit = 100 } = req.query;
 
-  let query = `
-    SELECT t.*, c.name as category_name, c.type as category_type
-    FROM transactions t
-    JOIN categories c ON t.category_id = c.id
-    WHERE t.user_id = ?
-  `;
-  const params = [userId];
+  // Vercel instances do not share their local SQLite files. Read transaction
+  // history from Supabase so the same account sees the same rows on every device.
+  const { data: cloudUser, error: userError } = await supabase
+    .from('users')
+    .select('id')
+    .eq('google_sub', req.user.google_sub)
+    .maybeSingle();
 
-  if (type && (type === 'income' || type === 'expense')) {
-    query += ` AND c.type = ?`;
-    params.push(type);
+  if (userError) {
+    console.error('[Transactions] Failed to resolve Supabase user:', userError.message);
+    return res.status(503).json({ error: 'Riwayat belum bisa dimuat dari database cloud.' });
   }
 
-  if (category_id) {
-    query += ` AND t.category_id = ?`;
-    params.push(category_id);
+  if (!cloudUser) {
+    return res.json({ success: true, count: 0, data: [] });
   }
 
-  if (start_date) {
-    query += ` AND t.occurred_on >= ?`;
-    params.push(start_date);
+  let cloudQuery = supabase
+    .from('transactions')
+    .select('*')
+    .eq('user_id', cloudUser.id)
+    .order('occurred_on', { ascending: false })
+    .order('id', { ascending: false });
+
+  if (category_id) cloudQuery = cloudQuery.eq('category_id', category_id);
+  if (start_date) cloudQuery = cloudQuery.gte('occurred_on', start_date);
+  if (end_date) cloudQuery = cloudQuery.lte('occurred_on', end_date);
+
+  const { data: cloudRows, error: transactionsError } = await cloudQuery;
+  if (transactionsError) {
+    console.error('[Transactions] Failed to load Supabase history:', transactionsError.message);
+    return res.status(503).json({ error: 'Riwayat belum bisa dimuat dari database cloud.' });
   }
 
-  if (end_date) {
-    query += ` AND t.occurred_on <= ?`;
-    params.push(end_date);
-  }
+  const categories = db.prepare('SELECT id, name, type FROM categories').all();
+  const categoriesById = new Map(categories.map((category) => [String(category.id), category]));
+  const searchTerm = typeof search === 'string' ? search.toLocaleLowerCase('id-ID') : '';
+  const maxRows = Math.min(Math.max(parseInt(limit, 10) || 100, 1), 500);
+  const rows = (cloudRows || [])
+    .map((row) => {
+      const category = categoriesById.get(String(row.category_id));
+      return {
+        ...row,
+        category_name: category?.name,
+        category_type: category?.type
+      };
+    })
+    .filter((row) => (!type || row.category_type === type))
+    .filter((row) => !searchTerm || [row.description, row.raw_text, row.category_name]
+      .some((value) => String(value || '').toLocaleLowerCase('id-ID').includes(searchTerm)))
+    .slice(0, maxRows);
 
-  if (search) {
-    query += ` AND (t.description LIKE ? OR t.raw_text LIKE ? OR c.name LIKE ?)`;
-    const searchPattern = `%${search}%`;
-    params.push(searchPattern, searchPattern, searchPattern);
-  }
-
-  query += ` ORDER BY t.occurred_on DESC, t.id DESC LIMIT ?`;
-  params.push(parseInt(limit, 10));
-
-  const rows = db.prepare(query).all(...params);
-  res.json({ success: true, count: rows.length, data: rows });
+  return res.json({ success: true, count: rows.length, data: rows });
 });
 
 /**
