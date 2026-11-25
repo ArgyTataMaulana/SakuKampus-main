@@ -7,14 +7,14 @@ import { authRouter } from './routes/auth.js';
 import { chatRouter } from './routes/chat.js';
 import { transactionsRouter } from './routes/transactions.js';
 import { dashboardRouter } from './routes/dashboard.js';
-import { initDatabase } from './config/database.js';
+import { verifySupabaseConnection } from './config/supabase.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const publicPath = path.resolve(__dirname, '../public');
 
-// Initialize database schema and initial categories
-initDatabase();
+// Verify Supabase cloud connection
+verifySupabaseConnection();
 
 export const app = express();
 

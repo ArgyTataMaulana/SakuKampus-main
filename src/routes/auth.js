@@ -4,10 +4,85 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { db } from '../config/database.js';
-import { signUserToken, authMiddleware, resolveOrHydrateUser } from '../middlewares/auth.js';
+import { supabase } from '../config/supabase.js';
+import { signUserToken, resolveOrHydrateUser } from '../middlewares/auth.js';
 
 export const authRouter = express.Router();
+
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  sameSite: 'lax',
+  secure: process.env.NODE_ENV === 'production'
+};
+
+/**
+ * Helper to find or create/update a user in Supabase
+ */
+async function upsertSupabaseUser({ google_sub, email, name, picture_url }) {
+  const { data: existingBySub } = await supabase
+    .from('users')
+    .select('id, google_sub, email, name, picture_url')
+    .eq('google_sub', google_sub)
+    .maybeSingle();
+
+  if (existingBySub) {
+    const { data: updated, error } = await supabase
+      .from('users')
+      .update({
+        email,
+        name,
+        picture_url,
+        last_login_at: new Date().toISOString()
+      })
+      .eq('id', existingBySub.id)
+      .select('id, google_sub, email, name, picture_url')
+      .single();
+
+    if (error) throw new Error(error.message);
+    return updated;
+  }
+
+  // Fallback check by email in case user was previously created with another sub
+  if (email) {
+    const { data: existingByEmail } = await supabase
+      .from('users')
+      .select('id, google_sub, email, name, picture_url')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (existingByEmail) {
+      const { data: updated, error } = await supabase
+        .from('users')
+        .update({
+          name,
+          picture_url,
+          last_login_at: new Date().toISOString()
+        })
+        .eq('id', existingByEmail.id)
+        .select('id, google_sub, email, name, picture_url')
+        .single();
+
+      if (error) throw new Error(error.message);
+      return updated;
+    }
+  }
+
+  const { data: created, error: insertError } = await supabase
+    .from('users')
+    .insert({
+      google_sub,
+      email,
+      name,
+      picture_url,
+      last_login_at: new Date().toISOString()
+    })
+    .select('id, google_sub, email, name, picture_url')
+    .single();
+
+  if (insertError) throw new Error(insertError.message);
+  return created;
+}
 
 /**
  * Initiate Google OAuth 2.0 flow
@@ -21,8 +96,6 @@ authRouter.get('/google', (req, res) => {
     console.warn('[AUTH] GOOGLE_CLIENT_ID atau GOOGLE_CLIENT_SECRET belum terbaca di .env! Mengarahkan ke modal...');
     return res.redirect('/login.html?action=google_login');
   }
-
-  console.log('[AUTH] Memulai Google OAuth flow resmi...');
 
   const state = crypto.randomBytes(16).toString('hex');
   res.cookie('oauth_state', state, {
@@ -46,7 +119,6 @@ authRouter.get('/google', (req, res) => {
 
 /**
  * Handle Google OAuth callback
- * Follows sequence diagram failure & success paths (T8-2)
  */
 authRouter.get('/google/callback', async (req, res) => {
   const { code, state, error } = req.query;
@@ -56,21 +128,17 @@ authRouter.get('/google/callback', async (req, res) => {
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const redirectUri = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth/google/callback';
 
-  // Failure Path 1: User denies access
   if (error === 'access_denied' || error) {
     return res.redirect('/login.html?error=cancelled');
   }
 
-  // Failure Path 2: State doesn't match cookie (CSRF protection)
   if (!state || !savedState || state !== savedState) {
     return res.redirect('/login.html?error=invalid_state');
   }
 
-  // Clear oauth state cookie
   res.clearCookie('oauth_state');
 
   try {
-    // Exchange code with token at Google token endpoint
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -89,9 +157,6 @@ authRouter.get('/google/callback', async (req, res) => {
     }
 
     const tokenData = await tokenRes.json();
-    const idToken = tokenData.id_token;
-
-    // Verify and decode user profile from Google
     const userinfoRes = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` }
     });
@@ -104,34 +169,17 @@ authRouter.get('/google/callback', async (req, res) => {
     const googleSub = profile.sub;
     const email = profile.email;
     const name = profile.name || email.split('@')[0];
-    const picture = profile.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`;
+    const picture = profile.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
 
-    // Find or create user by google_sub (as specified in T8-1 ERD decisions)
-    let user = db.prepare('SELECT * FROM users WHERE google_sub = ?').get(googleSub);
-    if (user) {
-      db.prepare(`
-        UPDATE users
-        SET email = ?, name = ?, picture_url = ?, last_login_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `).run(email, name, picture, user.id);
-      user = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id);
-    } else {
-      const result = db.prepare(`
-        INSERT INTO users (google_sub, email, name, picture_url)
-        VALUES (?, ?, ?, ?)
-      `).run(googleSub, email, name, picture);
-      user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
-    }
-
-    // Sign session token & set httpOnly cookie
-    const token = signUserToken(user);
-    res.cookie('sakukampus_token', token, {
-      httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production'
+    const user = await upsertSupabaseUser({
+      google_sub: googleSub,
+      email,
+      name,
+      picture_url: picture
     });
 
+    const token = signUserToken(user);
+    res.cookie('sakukampus_token', token, COOKIE_OPTIONS);
     res.redirect('/index.html');
   } catch (err) {
     console.error('OAuth Callback Exception:', err);
@@ -140,85 +188,62 @@ authRouter.get('/google/callback', async (req, res) => {
 });
 
 /**
- * Direct Google Sign-In (Seamless Google Flow without requiring GCP billing/setup)
+ * Direct Google Sign-In (Demo / Instant Account Modal)
  */
-authRouter.post('/google-direct', (req, res) => {
-  const {
-    email = 'dimas.pratama@student.umy.ac.id',
-    name = 'Dimas Pratama',
-    google_sub
-  } = req.body || {};
+authRouter.post('/google-direct', async (req, res) => {
+  try {
+    const {
+      email = 'dimas.pratama@student.umy.ac.id',
+      name = 'Dimas Pratama',
+      google_sub
+    } = req.body || {};
 
-  const cleanEmail = (typeof email === 'string' && email.trim()) ? email.trim() : 'dimas.pratama@student.umy.ac.id';
-  const cleanName = (typeof name === 'string' && name.trim()) ? name.trim() : 'Dimas Pratama';
-  const sub = google_sub || 'google-sub-' + Buffer.from(cleanEmail).toString('hex').slice(0, 16);
-  const picture = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(cleanName)}`;
+    const cleanEmail = (typeof email === 'string' && email.trim()) ? email.trim() : 'dimas.pratama@student.umy.ac.id';
+    const cleanName = (typeof name === 'string' && name.trim()) ? name.trim() : 'Dimas Pratama';
+    const sub = google_sub || 'google-sub-' + Buffer.from(cleanEmail).toString('hex').slice(0, 16);
+    const picture = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(cleanName)}`;
 
-  let user = db.prepare('SELECT * FROM users WHERE email = ? OR google_sub = ?').get(cleanEmail, sub);
+    const user = await upsertSupabaseUser({
+      google_sub: sub,
+      email: cleanEmail,
+      name: cleanName,
+      picture_url: picture
+    });
 
-  if (!user) {
-    const result = db.prepare(`
-      INSERT INTO users (google_sub, email, name, picture_url)
-      VALUES (?, ?, ?, ?)
-    `).run(sub, cleanEmail, cleanName, picture);
-    user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
-  } else {
-    db.prepare(`
-      UPDATE users
-      SET email = ?, name = ?, picture_url = ?, last_login_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).run(cleanEmail, cleanName, picture, user.id);
-    user = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id);
+    const token = signUserToken(user);
+    res.cookie('sakukampus_token', token, COOKIE_OPTIONS);
+    return res.json({ success: true, user });
+  } catch (err) {
+    console.error('[AUTH] /google-direct error:', err.message);
+    return res.status(503).json({ error: 'Gagal menghubungi database cloud.' });
   }
-
-  const token = signUserToken(user);
-  res.cookie('sakukampus_token', token, {
-    httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production'
-  });
-
-  return res.json({ success: true, user });
 });
 
 /**
  * Demo Login (For instant local evaluation & testing)
  */
-authRouter.post('/demo-login', (req, res) => {
-  const demoSub = 'demo-mahasiswa-108';
-  let user = db.prepare('SELECT * FROM users WHERE google_sub = ? OR email = ?').get(demoSub, 'dimas.pratama@student.umy.ac.id');
+authRouter.post('/demo-login', async (req, res) => {
+  try {
+    const user = await upsertSupabaseUser({
+      google_sub: 'demo-mahasiswa-108',
+      email: 'dimas.pratama@student.umy.ac.id',
+      name: 'Dimas Pratama (Demo Mahasiswa)',
+      picture_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Dimas'
+    });
 
-  if (!user) {
-    const result = db.prepare(`
-      INSERT INTO users (google_sub, email, name, picture_url)
-      VALUES (?, ?, ?, ?)
-    `).run(
-      demoSub,
-      'dimas.pratama@student.umy.ac.id',
-      'Dimas Pratama (Demo Mahasiswa)',
-      'https://api.dicebear.com/7.x/avataaars/svg?seed=Dimas'
-    );
-    user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
-  } else {
-    db.prepare('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
+    const token = signUserToken(user);
+    res.cookie('sakukampus_token', token, COOKIE_OPTIONS);
+    return res.json({ success: true, user });
+  } catch (err) {
+    console.error('[AUTH] /demo-login error:', err.message);
+    return res.status(503).json({ error: 'Gagal menghubungi database cloud.' });
   }
-
-  const token = signUserToken(user);
-  res.cookie('sakukampus_token', token, {
-    httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production'
-  });
-
-  return res.json({ success: true, user });
 });
 
 /**
  * Check authentication status & get profile
  */
-authRouter.get('/me', (req, res) => {
+authRouter.get('/me', async (req, res) => {
   const token = req.cookies?.sakukampus_token;
   if (!token) {
     return res.json({ authenticated: false });
@@ -226,7 +251,7 @@ authRouter.get('/me', (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'sakukampus-team7-secret-key-2026');
-    const user = resolveOrHydrateUser(decoded);
+    const user = await resolveOrHydrateUser(decoded);
     if (!user) {
       return res.json({ authenticated: false });
     }

@@ -1,4 +1,4 @@
-import { db } from '../config/database.js';
+import { supabase, getCategoriesMap } from '../config/supabase.js';
 import { aiGenerateText, getActiveProvider } from './aiProvider.js';
 
 function formatRupiah(num) {
@@ -61,72 +61,100 @@ export function isConsultationQuery(text) {
 }
 
 /**
- * Gather financial metrics for the current user
+ * Gather financial metrics for the current user from Supabase
  */
-export function getUserFinancialContext(userId) {
+export async function getUserFinancialContext(userId) {
   const now = new Date();
   const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-  // Overall Balances
-  const incTotal = db.prepare(`
-    SELECT COALESCE(SUM(t.amount), 0) as total
-    FROM transactions t JOIN categories c ON t.category_id = c.id
-    WHERE t.user_id = ? AND c.type = 'income'
-  `).get(userId).total;
+  const [{ data: txData }, categoriesById] = await Promise.all([
+    supabase
+      .from('transactions')
+      .select('category_id, amount, description, raw_text, occurred_on')
+      .eq('user_id', userId)
+      .order('occurred_on', { ascending: false }),
+    getCategoriesMap()
+  ]);
 
-  const expTotal = db.prepare(`
-    SELECT COALESCE(SUM(t.amount), 0) as total
-    FROM transactions t JOIN categories c ON t.category_id = c.id
-    WHERE t.user_id = ? AND c.type = 'expense'
-  `).get(userId).total;
+  const rows = (txData || []).map((row) => {
+    const cat = categoriesById.get(String(row.category_id));
+    return {
+      amount: Number(row.amount) || 0,
+      description: String(row.description || ''),
+      raw_text: String(row.raw_text || ''),
+      occurred_on: String(row.occurred_on || ''),
+      category_name: cat?.name || 'Lain-lain',
+      category_type: cat?.type || 'expense'
+    };
+  });
+
+  let incTotal = 0;
+  let expTotal = 0;
+  let monthlyInc = 0;
+  let monthlyExp = 0;
+  let uangSakuIncome = 0;
+  const tagihanList = [];
+  const debtList = [];
+  const monthlyCategoryTotals = new Map();
+
+  for (const tx of rows) {
+    const isCurrentMonth = tx.occurred_on.startsWith(currentYM);
+    if (tx.category_type === 'income') {
+      incTotal += tx.amount;
+      if (isCurrentMonth) {
+        monthlyInc += tx.amount;
+        if (tx.category_name === 'Uang saku') uangSakuIncome += tx.amount;
+      }
+    } else {
+      expTotal += tx.amount;
+      if (isCurrentMonth) {
+        monthlyExp += tx.amount;
+        monthlyCategoryTotals.set(
+          tx.category_name,
+          (monthlyCategoryTotals.get(tx.category_name) || 0) + tx.amount
+        );
+      }
+    }
+
+    const descLower = tx.description.toLowerCase();
+    const rawLower = tx.raw_text.toLowerCase();
+
+    if (
+      tagihanList.length < 5 &&
+      (tx.category_name === 'Tagihan' ||
+        descLower.includes('kos') ||
+        descLower.includes('wifi') ||
+        descLower.includes('listrik') ||
+        descLower.includes('pulsa'))
+    ) {
+      tagihanList.push({
+        amount: tx.amount,
+        description: tx.description,
+        occurred_on: tx.occurred_on
+      });
+    }
+
+    if (
+      debtList.length < 5 &&
+      (descLower.includes('utang') ||
+        descLower.includes('hutang') ||
+        descLower.includes('pinjam') ||
+        rawLower.includes('utang'))
+    ) {
+      debtList.push({
+        amount: tx.amount,
+        description: tx.description,
+        occurred_on: tx.occurred_on
+      });
+    }
+  }
+
+  const topExpenses = Array.from(monthlyCategoryTotals.entries())
+    .map(([name, total]) => ({ name, total }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 3);
 
   const currentBalance = incTotal - expTotal;
-
-  // Monthly Income & Expenses
-  const monthlyInc = db.prepare(`
-    SELECT COALESCE(SUM(t.amount), 0) as total
-    FROM transactions t JOIN categories c ON t.category_id = c.id
-    WHERE t.user_id = ? AND c.type = 'income' AND t.occurred_on LIKE ?
-  `).get(userId, `${currentYM}%`).total;
-
-  const monthlyExp = db.prepare(`
-    SELECT COALESCE(SUM(t.amount), 0) as total
-    FROM transactions t JOIN categories c ON t.category_id = c.id
-    WHERE t.user_id = ? AND c.type = 'expense' AND t.occurred_on LIKE ?
-  `).get(userId, `${currentYM}%`).total;
-
-  // Monthly Uang Saku
-  const uangSakuIncome = db.prepare(`
-    SELECT COALESCE(SUM(t.amount), 0) as total
-    FROM transactions t JOIN categories c ON t.category_id = c.id
-    WHERE t.user_id = ? AND c.name = 'Uang saku' AND t.occurred_on LIKE ?
-  `).get(userId, `${currentYM}%`).total;
-
-  // Tagihan List (Recent 5 Tagihan)
-  const tagihanList = db.prepare(`
-    SELECT t.amount, t.description, t.occurred_on
-    FROM transactions t JOIN categories c ON t.category_id = c.id
-    WHERE t.user_id = ? AND (c.name = 'Tagihan' OR t.description LIKE '%kos%' OR t.description LIKE '%wifi%' OR t.description LIKE '%listrik%' OR t.description LIKE '%pulsa%')
-    ORDER BY t.occurred_on DESC LIMIT 5
-  `).all(userId);
-
-  // Debts (Transactions mentioning utang/pinjam)
-  const debtList = db.prepare(`
-    SELECT t.amount, t.description, t.occurred_on
-    FROM transactions t
-    WHERE t.user_id = ? AND (t.description LIKE '%utang%' OR t.description LIKE '%hutang%' OR t.description LIKE '%pinjam%' OR t.raw_text LIKE '%utang%')
-    ORDER BY t.occurred_on DESC LIMIT 5
-  `).all(userId);
-
-  // Top 3 Expense Categories
-  const topExpenses = db.prepare(`
-    SELECT c.name, SUM(t.amount) as total
-    FROM transactions t JOIN categories c ON t.category_id = c.id
-    WHERE t.user_id = ? AND c.type = 'expense' AND t.occurred_on LIKE ?
-    GROUP BY c.id, c.name
-    ORDER BY total DESC LIMIT 3
-  `).all(userId, `${currentYM}%`);
-
   const year = now.getFullYear();
   const month = now.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
