@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { db } from '../config/database.js';
-import { signUserToken, authMiddleware } from '../middlewares/auth.js';
+import { signUserToken, authMiddleware, resolveOrHydrateUser } from '../middlewares/auth.js';
 
 export const authRouter = express.Router();
 
@@ -226,7 +226,7 @@ authRouter.get('/me', (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'sakukampus-team7-secret-key-2026');
-    const user = db.prepare('SELECT id, google_sub, email, name, picture_url FROM users WHERE id = ?').get(decoded.id);
+    const user = resolveOrHydrateUser(decoded);
     if (!user) {
       return res.json({ authenticated: false });
     }
