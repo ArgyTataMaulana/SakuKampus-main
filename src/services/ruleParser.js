@@ -1,5 +1,5 @@
 // Rule-based Natural Language Processing Parser for Indonesian Financial Queries
-// Compliant with SakuKampus UMY Desain Pertemuan 8 (T8-3)
+import { detectWalletFromText, detectTransferFromText } from './walletHelper.js';
 
 const NUMBER_WORDS = {
   'nol': 0, 'satu': 1, 'sepasang': 2, 'dua': 2, 'tiga': 3, 'empat': 4,
@@ -258,6 +258,8 @@ export function generateDescription(rawText, category, type, nominal) {
   let cleaned = rawText
     .replace(/(?:rp\.?\s*)?\d+(?:[.,]\d+)?\s*(?:jt|juta|rb|k|ribu)?/gi, '')
     .replace(/\b(kemarin lusa|kemarin|hari ini|tadi|besok|lusa)\b/gi, '')
+    .replace(/\b(pakai|pake|via|lewat|dari|ke|di)\s+(cash|tunai|bank|bca|bri|bni|mandiri|bsi|seabank|jago|cimb|btn|gopay|ovo|dana|shopeepay|qris|rekening|atm|debit)\b/gi, '')
+    .replace(/\b(cash|tunai|kontan|bca|bri|bni|mandiri|bsi|seabank|qris)\b/gi, '')
     .replace(/^(aku|saya)\s+/i, '')
     .trim();
 
@@ -291,6 +293,28 @@ export function parseSentenceWithRules(text) {
     };
   }
 
+  const occurredOn = extractDate(rawText);
+
+  // Check if this is an inter-wallet transfer (e.g., "tarik tunai 100rb dari bca", "setor tunai 200rb ke bri")
+  const transferInfo = detectTransferFromText(rawText);
+  if (transferInfo) {
+    return {
+      success: true,
+      is_transfer: true,
+      data: {
+        amount: nominal,
+        type: 'transfer',
+        category: 'Pindah Dana',
+        description: transferInfo.description,
+        occurred_on: occurredOn,
+        raw_text: rawText,
+        parsed_by: 'rule',
+        from_wallet: transferInfo.from,
+        to_wallet: transferInfo.to
+      }
+    };
+  }
+
   const { category, type } = extractCategoryAndType(rawText);
   if (!category) {
     return {
@@ -299,7 +323,7 @@ export function parseSentenceWithRules(text) {
     };
   }
 
-  const occurredOn = extractDate(rawText);
+  const wallet = detectWalletFromText(rawText);
   const description = generateDescription(rawText, category, type, nominal);
 
   return {
@@ -311,7 +335,11 @@ export function parseSentenceWithRules(text) {
       description,
       occurred_on: occurredOn,
       raw_text: rawText,
-      parsed_by: 'rule'
+      parsed_by: 'rule',
+      wallet_type: wallet.wallet_type,
+      bank_name: wallet.bank_name,
+      wallet_label: wallet.wallet_label,
+      wallet_explicit: wallet.explicit
     }
   };
 }

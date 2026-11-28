@@ -1,6 +1,7 @@
 import express from 'express';
 import { supabase, getCategoriesMap } from '../config/supabase.js';
 import { authMiddleware } from '../middlewares/auth.js';
+import { parseWalletFromRow, computeWalletBalances } from '../services/walletHelper.js';
 
 export const dashboardRouter = express.Router();
 
@@ -48,12 +49,33 @@ dashboardRouter.get('/summary', authMiddleware, async (req, res) => {
       return res.status(503).json({ error: 'Gagal memuat ringkasan dari database cloud.' });
     }
 
-    const rows = (txResult.data || []).map((row) => {
+    const rawRows = txResult.data || [];
+    const walletBalances = computeWalletBalances(rawRows, categoriesById);
+
+    const rows = rawRows.map((row) => {
+      const wallet = parseWalletFromRow(row);
+      if (wallet.is_transfer) {
+        return {
+          ...row,
+          raw_text: wallet.clean_raw_text,
+          is_transfer: true,
+          category_name: 'Pindah Dana',
+          category_type: 'transfer',
+          wallet_type: 'transfer',
+          bank_name: '',
+          wallet_label: wallet.wallet_label
+        };
+      }
       const cat = categoriesById.get(String(row.category_id));
       return {
         ...row,
+        raw_text: wallet.clean_raw_text,
+        is_transfer: false,
         category_name: cat?.name || 'Lain-lain',
-        category_type: cat?.type || 'expense'
+        category_type: cat?.type || 'expense',
+        wallet_type: wallet.wallet_type,
+        bank_name: wallet.bank_name,
+        wallet_label: wallet.wallet_label
       };
     });
 
@@ -61,18 +83,27 @@ dashboardRouter.get('/summary', authMiddleware, async (req, res) => {
     let expenseTotal = 0;
     let monthlyIncome = 0;
     let monthlyExpense = 0;
+    let spentToday = 0;
 
     for (const tx of rows) {
+      if (tx.is_transfer) continue; // Transfers do not affect income/expense totals
       const amt = Number(tx.amount) || 0;
       const isCurrentMonth = String(tx.occurred_on || '').startsWith(currentYearMonth);
+      const isToday = String(tx.occurred_on || '') === todayDate;
       if (tx.category_type === 'income') {
         incomeTotal += amt;
         if (isCurrentMonth) monthlyIncome += amt;
       } else {
         expenseTotal += amt;
         if (isCurrentMonth) monthlyExpense += amt;
+        if (isToday) spentToday += amt;
       }
     }
+
+    const totalBalance = incomeTotal - expenseTotal;
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const remainingDays = Math.max(1, daysInMonth - now.getDate() + 1);
+    const safeDailyLimit = Math.max(0, Math.round(totalBalance / remainingDays));
 
     const usage = usageResult.data || { request_count: 0, llm_count: 0 };
     const dailyLimit = parseInt(process.env.DAILY_CHAT_LIMIT || '50', 10);
@@ -80,7 +111,18 @@ dashboardRouter.get('/summary', authMiddleware, async (req, res) => {
     return res.json({
       success: true,
       data: {
-        total_balance: incomeTotal - expenseTotal,
+        total_balance: totalBalance,
+        wallet_summary: {
+          cash: walletBalances.cashBalance,
+          bank: walletBalances.bankBalance,
+          banks: walletBalances.banks
+        },
+        safe_to_spend: {
+          daily_limit: safeDailyLimit,
+          spent_today: spentToday,
+          remaining_days: remainingDays,
+          days_in_month: daysInMonth
+        },
         lifetime_income: incomeTotal,
         lifetime_expense: expenseTotal,
         monthly_income: monthlyIncome,
@@ -113,7 +155,7 @@ dashboardRouter.get('/charts', authMiddleware, async (req, res) => {
     const [txResult, categoriesById] = await Promise.all([
       supabase
         .from('transactions')
-        .select('category_id, amount, occurred_on')
+        .select('category_id, amount, occurred_on, raw_text')
         .eq('user_id', userId),
       getCategoriesMap()
     ]);
@@ -122,15 +164,17 @@ dashboardRouter.get('/charts', authMiddleware, async (req, res) => {
       return res.status(503).json({ error: 'Gagal memuat grafik dari database cloud.' });
     }
 
-    const rows = (txResult.data || []).map((row) => {
-      const cat = categoriesById.get(String(row.category_id));
-      return {
-        amount: Number(row.amount) || 0,
-        occurred_on: String(row.occurred_on || ''),
-        category_name: cat?.name || 'Lain-lain pengeluaran',
-        category_type: cat?.type || 'expense'
-      };
-    });
+    const rows = (txResult.data || [])
+      .filter((row) => !parseWalletFromRow(row).is_transfer)
+      .map((row) => {
+        const cat = categoriesById.get(String(row.category_id));
+        return {
+          amount: Number(row.amount) || 0,
+          occurred_on: String(row.occurred_on || ''),
+          category_name: cat?.name || 'Lain-lain pengeluaran',
+          category_type: cat?.type || 'expense'
+        };
+      });
 
     // 1. Expense Breakdown by Category
     const catTotals = new Map();

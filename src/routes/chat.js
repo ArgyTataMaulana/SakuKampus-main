@@ -1,5 +1,5 @@
 import express from 'express';
-import { supabase, getAllCategories } from '../config/supabase.js';
+import { supabase, getAllCategories, getCategoriesMap } from '../config/supabase.js';
 import { authMiddleware } from '../middlewares/auth.js';
 import { parseSentenceWithRules } from '../services/ruleParser.js';
 import { parseSentenceWithLLM } from '../services/llmService.js';
@@ -9,6 +9,13 @@ import {
   getGeminiConsultationResponse
 } from '../services/financialAdvisor.js';
 import { getActiveProvider } from '../services/aiProvider.js';
+import {
+  detectWalletFromText,
+  encodeRawTextWithWallet,
+  encodeRawTextWithTransfer,
+  computeWalletBalances,
+  validateExpenseAgainstBalances
+} from '../services/walletHelper.js';
 
 export const chatRouter = express.Router();
 
@@ -162,23 +169,160 @@ chatRouter.post('/', authMiddleware, async (req, res) => {
 
     // 5. Look up Category ID from Supabase categories
     const txData = parseResult.data;
-    const allCategories = await getAllCategories();
+    const [allCategories, categoriesById] = await Promise.all([
+      getAllCategories(),
+      getCategoriesMap()
+    ]);
+
+    // 5a. Handle Inter-Wallet Transfer via Chat/Voice (e.g., "tarik tunai 100rb dari bca")
+    if (parseResult.is_transfer && txData.from_wallet && txData.to_wallet) {
+      if (txData.from_wallet.wallet_type === txData.to_wallet.wallet_type && txData.from_wallet.bank_name === txData.to_wallet.bank_name) {
+        return res.json({
+          success: false,
+          is_insufficient_balance: true,
+          bot_reply: '⚠️ Sumber dana asal dan tujuan tidak boleh sama. Pilih dua dompet yang berbeda (misalnya dari BCA ke Cash).',
+          usage: formatUsagePayload(nextRequestCount)
+        });
+      }
+      const roundedAmount = Math.round(Number(txData.amount));
+      const { data: userTxRows, error: balErr } = await supabase
+        .from('transactions')
+        .select('id, category_id, amount, description, raw_text')
+        .eq('user_id', userId);
+
+      if (balErr) {
+        return res.status(503).json({ error: 'Gagal memverifikasi saldo dari database cloud.' });
+      }
+
+      const balances = computeWalletBalances(userTxRows || [], categoriesById);
+      const check = validateExpenseAgainstBalances({
+        amount: roundedAmount,
+        wallet_type: txData.from_wallet.wallet_type,
+        bank_name: txData.from_wallet.bank_name,
+        balances,
+        explicitWallet: true
+      });
+
+      if (!check.ok) {
+        return res.json({
+          success: false,
+          is_insufficient_balance: true,
+          bot_reply: `⚠️ **Pindah Dana Ditolak — Saldo Asal Tidak Mencukupi**\n\n${check.reason}`,
+          usage: formatUsagePayload(nextRequestCount)
+        });
+      }
+
+      const fallbackCat = allCategories.find((c) => c.name === 'Lain-lain pengeluaran') || allCategories[0];
+      const txSource = source === 'voice' ? 'voice' : 'chat';
+      const rawTextEncoded = encodeRawTextWithTransfer(cleanMessage, txData.from_wallet, txData.to_wallet);
+
+      const { data: insertedTx, error: insertError } = await supabase
+        .from('transactions')
+        .insert({
+          user_id: userId,
+          category_id: fallbackCat.id,
+          amount: roundedAmount,
+          description: txData.description,
+          raw_text: rawTextEncoded,
+          source: txSource,
+          parsed_by: parsedBy,
+          occurred_on: txData.occurred_on
+        })
+        .select('*')
+        .single();
+
+      if (insertError) {
+        return res.status(503).json({ error: 'Gagal menyimpan pindah dana ke database cloud.' });
+      }
+
+      const transferLabel = `${txData.from_wallet.wallet_label} → ${txData.to_wallet.wallet_label}`;
+      const formattedNominal = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(roundedAmount);
+
+      return res.json({
+        success: true,
+        bot_reply: `🔄 **Pindah Dana Berhasil!**\n• **Nominal**: ${formattedNominal}\n• **Alur**: ${transferLabel}\n• **Keterangan**: ${txData.description}\n• **Tanggal**: ${txData.occurred_on}\n\n*(Tidak menambah total pengeluaran bulanan)*`,
+        transaction: {
+          ...insertedTx,
+          raw_text: cleanMessage,
+          is_transfer: true,
+          category_name: 'Pindah Dana',
+          category_type: 'transfer',
+          wallet_type: 'transfer',
+          wallet_label: transferLabel
+        },
+        usage: formatUsagePayload(nextRequestCount)
+      });
+    }
+
     let categoryRow = allCategories.find((c) => c.name === txData.category);
     if (!categoryRow) {
       const defaultCatName = txData.type === 'income' ? 'Lain-lain pemasukan' : 'Lain-lain pengeluaran';
       categoryRow = allCategories.find((c) => c.name === defaultCatName) || allCategories[0];
     }
 
-    // 6. Save Transaction to Supabase (F-08: Strictly per req.user.id)
+    const detectedWallet = txData.wallet_type
+      ? {
+          wallet_type: txData.wallet_type,
+          bank_name: txData.bank_name || '',
+          wallet_label: txData.wallet_label || (txData.wallet_type === 'bank' ? 'Bank' : 'Cash'),
+          explicit: Boolean(txData.wallet_explicit)
+        }
+      : detectWalletFromText(cleanMessage);
+
+    let resolvedWallet = {
+      wallet_type: detectedWallet.wallet_type,
+      bank_name: detectedWallet.bank_name,
+      wallet_label: detectedWallet.wallet_label
+    };
+
+    const roundedAmount = Math.round(Number(txData.amount));
+
+    // 5b. Balance Logic Guard: prevent expense if total/wallet balance is insufficient
+    if (categoryRow.type === 'expense') {
+      const { data: userTxRows, error: balErr } = await supabase
+        .from('transactions')
+        .select('id, category_id, amount, description, raw_text')
+        .eq('user_id', userId);
+
+      if (balErr) {
+        return res.status(503).json({ error: 'Gagal memverifikasi saldo dari database cloud.' });
+      }
+
+      const balances = computeWalletBalances(userTxRows || [], categoriesById);
+      const check = validateExpenseAgainstBalances({
+        amount: roundedAmount,
+        wallet_type: detectedWallet.wallet_type,
+        bank_name: detectedWallet.bank_name,
+        balances,
+        explicitWallet: detectedWallet.explicit
+      });
+
+      if (!check.ok) {
+        return res.json({
+          success: false,
+          is_insufficient_balance: true,
+          bot_reply: `⚠️ **Transaksi Ditolak — Saldo Tidak Mencukupi**\n\n${check.reason}\n\n` +
+            `💡 Contoh catat pemasukan terlebih dahulu:\n` +
+            `• *"dapat uang saku 500rb cash"*\n` +
+            `• *"gajian 2 juta bank bca"*`,
+          usage: formatUsagePayload(nextRequestCount)
+        });
+      }
+      resolvedWallet = check.resolvedWallet;
+    }
+
+    // 6. Save Transaction to Supabase (strictly per req.user.id)
     const txSource = source === 'voice' ? 'voice' : 'chat';
+    const rawTextEncoded = encodeRawTextWithWallet(cleanMessage, resolvedWallet.wallet_type, resolvedWallet.bank_name);
+
     const { data: insertedTx, error: insertError } = await supabase
       .from('transactions')
       .insert({
         user_id: userId,
         category_id: categoryRow.id,
-        amount: Math.round(Number(txData.amount)),
+        amount: roundedAmount,
         description: txData.description,
-        raw_text: cleanMessage,
+        raw_text: rawTextEncoded,
         source: txSource,
         parsed_by: parsedBy,
         occurred_on: txData.occurred_on
@@ -193,8 +337,12 @@ chatRouter.post('/', authMiddleware, async (req, res) => {
 
     const createdTx = {
       ...insertedTx,
+      raw_text: cleanMessage,
       category_name: categoryRow.name,
-      category_type: categoryRow.type
+      category_type: categoryRow.type,
+      wallet_type: resolvedWallet.wallet_type,
+      bank_name: resolvedWallet.bank_name,
+      wallet_label: resolvedWallet.wallet_label
     };
 
     // 7. Format success confirmation message
@@ -203,15 +351,12 @@ chatRouter.post('/', authMiddleware, async (req, res) => {
     const parserBadge = parsedBy === 'rule' ? '⚡ Aturan Cepat' : `🤖 AI (${getActiveProvider().toUpperCase()})`;
     const sourceBadge = txSource === 'voice' ? '🎙️ Suara' : '💬 Teks';
 
-    const isDebt = /\b(utang|hutang|pinjam|minjam|meminjam|ngutang|berutang|kasbon)\b/i.test(createdTx.description) ||
-      /\b(utang|hutang|pinjam|minjam|meminjam|ngutang|berutang|kasbon)\b/i.test(cleanMessage);
-    const debtNote = isDebt ? `\n• *💡 Dicatat sebagai pengeluaran (kewajiban utang/pinjaman) sehingga saldo berkurang.*` : '';
-
     const botReply = `✅ Berhasil mencatat ${typeText.toLowerCase()}!\n` +
       `• **Kategori**: ${createdTx.category_name}\n` +
       `• **Nominal**: ${formattedNominal}\n` +
+      `• **Sumber Dana**: ${createdTx.wallet_label}\n` +
       `• **Keterangan**: ${createdTx.description}\n` +
-      `• **Tanggal**: ${createdTx.occurred_on}${debtNote}\n` +
+      `• **Tanggal**: ${createdTx.occurred_on}\n` +
       `• *(${parserBadge} via ${sourceBadge})*`;
 
     return res.json({

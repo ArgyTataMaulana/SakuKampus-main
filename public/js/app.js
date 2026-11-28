@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     '/chat': 'chat',
     '/history': 'history',
     '/transactions': 'history',
-    '/about': 'about',
     '/dashboard': 'dashboard'
   };
   const initialView = routeMap[path] || 'dashboard';
@@ -29,54 +28,82 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadTransactions();
 });
 
-// Toast Notification System (Achievement Style)
-function showToast(message, type = 'success') {
+// Proper Production Toast Notification System
+function showToast(message, type = 'success', customTitle = null) {
   const container = document.getElementById('toastContainer');
   if (!container) return;
 
-  const id = 'toast-' + Date.now();
+  const configMap = {
+    success: {
+      title: customTitle || 'Berhasil',
+      accent: 'border-l-emerald-600',
+      iconBg: 'bg-emerald-600 text-white',
+      icon: 'fa-check',
+      barColor: 'bg-emerald-600'
+    },
+    error: {
+      title: customTitle || 'Gagal',
+      accent: 'border-l-bauhaus-red',
+      iconBg: 'bg-bauhaus-red text-white',
+      icon: 'fa-xmark',
+      barColor: 'bg-bauhaus-red'
+    },
+    warning: {
+      title: customTitle || 'Perhatian',
+      accent: 'border-l-bauhaus-yellow',
+      iconBg: 'bg-bauhaus-yellow text-bauhaus-dark',
+      icon: 'fa-exclamation',
+      barColor: 'bg-bauhaus-yellow'
+    },
+    info: {
+      title: customTitle || 'Informasi',
+      accent: 'border-l-bauhaus-blue',
+      iconBg: 'bg-bauhaus-blue text-white',
+      icon: 'fa-info',
+      barColor: 'bg-bauhaus-blue'
+    }
+  };
+  const cfg = configMap[type] || configMap.info;
+
+  const id = 'toast-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
   const div = document.createElement('div');
   div.id = id;
-  div.className = 'toast-item pointer-events-auto p-4 rounded-btn border-2 flex items-center gap-3 text-xs font-semibold shadow-card';
+  div.setAttribute('role', 'alert');
+  div.className = `toast-item pointer-events-auto relative overflow-hidden bg-white dark:bg-nightbg-card text-slate-900 dark:text-nighttext border-l-[6px] ${cfg.accent}`;
 
-  let colors = 'bg-white dark:bg-nightbg-card border-emerald-500 text-emerald-700 dark:text-emerald-400';
-  let icon = '<i class="fa-solid fa-circle-check text-base text-emerald-600"></i>';
-
-  if (type === 'error') {
-    colors = 'bg-white dark:bg-nightbg-card border-red-500 text-red-600 dark:text-red-400';
-    icon = '<i class="fa-solid fa-circle-xmark text-base text-red-500"></i>';
-  } else if (type === 'warning') {
-    colors = 'bg-white dark:bg-nightbg-card border-amber-500 text-amber-700 dark:text-amber-400';
-    icon = '<i class="fa-solid fa-triangle-exclamation text-base text-amber-500"></i>';
-  } else if (type === 'info') {
-    colors = 'bg-white dark:bg-nightbg-card border-brand-500 text-brand-700 dark:text-brand-400';
-    icon = '<i class="fa-solid fa-circle-info text-base text-brand-600"></i>';
-  }
-
-  div.className += ' ' + colors;
   div.innerHTML = `
-    ${icon}
-    <div class="flex-1 font-sans">${escapeHtml(message)}</div>
-    <button onclick="document.getElementById('${id}').remove()" class="text-ink/40 hover:text-ink dark:text-nighttext/40 dark:hover:text-nighttext" aria-label="Tutup notifikasi">
-      <i class="fa-solid fa-xmark"></i>
-    </button>
+    <div class="p-3.5 pr-3 flex items-start gap-3">
+      <div class="w-7 h-7 ${cfg.iconBg} flex items-center justify-center shrink-0 mt-0.5 text-xs font-black">
+        <i class="fa-solid ${cfg.icon}" aria-hidden="true"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100 leading-tight">${escapeHtml(cfg.title)}</p>
+        <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5 leading-snug font-medium">${escapeHtml(message)}</p>
+      </div>
+      <button type="button" onclick="dismissToast('${id}')" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white shrink-0 transition" aria-label="Tutup notifikasi">
+        <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="h-1 w-full bg-slate-100 dark:bg-slate-800">
+      <div class="toast-progress h-full ${cfg.barColor}"></div>
+    </div>
   `;
 
   container.appendChild(div);
+  setTimeout(() => dismissToast(id), 3800);
+}
 
-  setTimeout(() => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.style.opacity = '0';
-      el.style.transform = 'translateX(20px)';
-      el.style.transition = 'all 0.3s ease';
-      setTimeout(() => el.remove(), 300);
-    }
-  }, 3500);
+function dismissToast(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('toast-exit');
+  setTimeout(() => el.remove(), 220);
 }
 
 // View Navigation Switcher
 function switchView(viewName) {
+  const views = ['dashboard', 'chat', 'history'];
+  if (!views.includes(viewName)) viewName = 'dashboard';
   currentView = viewName;
   try {
     const targetPath = viewName === 'dashboard' ? '/' : `/${viewName}`;
@@ -99,12 +126,10 @@ function switchView(viewName) {
     }
   }
 
-  const views = ['dashboard', 'chat', 'history', 'about'];
   const titles = {
     dashboard: { title: 'Dashboard Keuangan', sub: 'Ringkasan saldo & transaksi pintar' },
     chat: { title: 'Catat Transaksi', sub: 'Chatbot pintar & rekognisi suara (id-ID)' },
-    history: { title: 'Riwayat Transaksi', sub: 'Pencarian & manajemen transaksi keuangan' },
-    about: { title: 'Manajemen Proyek TI', sub: 'Kelompok Team 7 · Metode Waterfall' }
+    history: { title: 'Riwayat Transaksi', sub: 'Pencarian & manajemen transaksi keuangan' }
   };
 
   // Toggle view containers
@@ -121,21 +146,22 @@ function switchView(viewName) {
       }
     }
 
-    // Desktop nav styles
+    // Desktop nav styles (sharp Bauhaus geometry)
     if (navBtn) {
       if (v === viewName) {
-        navBtn.className = 'nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-semibold transition bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400';
+        navBtn.className = 'nav-item w-full flex items-center gap-3 px-3.5 py-2.5 text-sm font-semibold transition bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400';
       } else {
-        navBtn.className = 'nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800';
+        navBtn.className = 'nav-item w-full flex items-center gap-3 px-3.5 py-2.5 text-sm font-medium transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800';
       }
     }
 
-    // Mobile nav styles
+    // Mobile nav styles (Clean 3-column Bauhaus tabs, zero overlap)
     if (mobileNavBtn) {
+      const borderClass = v !== 'history' ? ' border-r border-bauhaus-dark/20' : '';
       if (v === viewName) {
-        mobileNavBtn.className = 'flex flex-col items-center gap-1 text-brand-600 dark:text-brand-400 text-xs font-semibold min-w-[44px] min-h-[44px] justify-center';
+        mobileNavBtn.className = `flex flex-col items-center justify-center gap-1 py-2.5 min-h-[56px] bg-bauhaus-yellow text-bauhaus-dark font-extrabold${borderClass} transition`;
       } else {
-        mobileNavBtn.className = 'flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-brand-600 text-xs min-w-[44px] min-h-[44px] justify-center';
+        mobileNavBtn.className = `flex flex-col items-center justify-center gap-1 py-2.5 min-h-[56px] text-slate-600 dark:text-slate-400 font-bold${borderClass} transition`;
       }
     }
   });
@@ -170,7 +196,7 @@ function switchView(viewName) {
 
 // Global modal backdrop & escape key handling
 function initModalListeners() {
-  const modals = ['editModal', 'deleteModal', 'addModal'];
+  const modals = ['editModal', 'deleteModal', 'addModal', 'logoutModal', 'transferModal', 'budgetModal'];
   modals.forEach(modalId => {
     const modalEl = document.getElementById(modalId);
     if (modalEl) {
@@ -179,6 +205,9 @@ function initModalListeners() {
           if (modalId === 'editModal') closeEditModal();
           if (modalId === 'deleteModal') closeDeleteModal();
           if (modalId === 'addModal') closeAddModal();
+          if (modalId === 'logoutModal') closeLogoutModal();
+          if (modalId === 'transferModal') closeTransferModal();
+          if (modalId === 'budgetModal') closeBudgetModal();
         }
       });
     }
@@ -189,6 +218,9 @@ function initModalListeners() {
       closeEditModal();
       closeDeleteModal();
       closeAddModal();
+      closeLogoutModal();
+      closeTransferModal();
+      closeBudgetModal();
       closeFloatingChat();
       closeMobileMenu();
     }
@@ -199,17 +231,65 @@ function initModalListeners() {
 function openAddModal() {
   const addModal = document.getElementById('addModal');
   const dateInput = document.getElementById('addDate');
+  const walletSelect = document.getElementById('addWalletType');
+  const bankSelect = document.getElementById('addBankName');
   if (dateInput) {
     const now = new Date();
     dateInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   }
-  setAddType('expense');
+  if (walletSelect) walletSelect.value = 'cash';
+  if (bankSelect) bankSelect.value = '';
+  toggleAddBankField();
+
+  // Smart default: if user has 0 balance, default to Pemasukan so they can add funds easily
+  const wb = window.currentWalletBalances || { total: 0, cash: 0, bank: 0 };
+  setAddType(wb.total <= 0 ? 'income' : 'expense');
+
   if (addModal) addModal.classList.remove('hidden');
 }
 
 function closeAddModal() {
   const addModal = document.getElementById('addModal');
   if (addModal) addModal.classList.add('hidden');
+}
+
+function toggleAddBankField() {
+  const walletType = document.getElementById('addWalletType')?.value || 'cash';
+  const wrap = document.getElementById('addBankNameWrap');
+  if (wrap) {
+    if (walletType === 'bank') {
+      wrap.classList.remove('hidden');
+    } else {
+      wrap.classList.add('hidden');
+    }
+  }
+  updateAddBalanceHint();
+}
+
+function updateAddBalanceHint() {
+  const notice = document.getElementById('addBalanceNotice');
+  if (!notice) return;
+  const wb = window.currentWalletBalances || { total: 0, cash: 0, bank: 0 };
+  const walletType = document.getElementById('addWalletType')?.value || 'cash';
+
+  if (currentAddType === 'expense') {
+    if (wb.total <= 0) {
+      notice.className = 'p-3 border-2 border-bauhaus-dark border-l-[6px] border-l-bauhaus-red bg-red-50 dark:bg-red-950/30 text-red-800 dark:text-red-200 text-xs font-semibold';
+      notice.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i> Saldo Anda saat ini <b>Rp 0</b>. Catat <b>Pemasukan</b> terlebih dahulu sebelum mencatat pengeluaran.`;
+      return;
+    }
+    const available = walletType === 'bank' ? wb.bank : wb.cash;
+    const label = walletType === 'bank' ? 'Bank' : 'Cash';
+    if (available <= 0) {
+      notice.className = 'p-3 border-2 border-bauhaus-dark border-l-[6px] border-l-bauhaus-yellow bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 text-xs font-semibold';
+      notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Saldo <b>${label}</b> Anda Rp 0 (Cash: ${formatRupiah(wb.cash)} · Bank: ${formatRupiah(wb.bank)}). Pilih sumber dana yang memiliki saldo.`;
+      return;
+    }
+    notice.className = 'p-2.5 border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 text-xs font-medium';
+    notice.innerHTML = `Saldo <b>${label}</b> tersedia: <b class="tabular-nums text-slate-900 dark:text-slate-100">${formatRupiah(available)}</b>`;
+  } else {
+    notice.className = 'hidden';
+  }
 }
 
 function setAddType(type) {
@@ -231,6 +311,7 @@ function setAddType(type) {
     const filtered = allCategories.filter(c => c.type === type);
     select.innerHTML = filtered.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
   }
+  updateAddBalanceHint();
 }
 
 async function handleSaveAdd(e) {
@@ -242,6 +323,8 @@ async function handleSaveAdd(e) {
   const category_id = document.getElementById('addCategory').value;
   const description = document.getElementById('addDesc').value;
   const occurred_on = document.getElementById('addDate').value;
+  const wallet_type = document.getElementById('addWalletType')?.value || 'cash';
+  const bank_name = wallet_type === 'bank' ? (document.getElementById('addBankName')?.value || '') : '';
 
   if (submitBtn) {
     submitBtn.disabled = true;
@@ -253,7 +336,9 @@ async function handleSaveAdd(e) {
       amount,
       category_id,
       description,
-      occurred_on
+      occurred_on,
+      wallet_type,
+      bank_name
     });
 
     if (res.success) {
@@ -263,7 +348,7 @@ async function handleSaveAdd(e) {
       loadDashboardData();
       loadTransactions();
     } else {
-      showToast(res.error || 'Gagal menyimpan transaksi.', 'error');
+      showToast(res.error || 'Gagal menyimpan transaksi.', 'warning', 'Tidak Dapat Disimpan');
     }
   } catch (err) {
     showToast('Terjadi kesalahan saat menyimpan transaksi.', 'error');
@@ -272,6 +357,171 @@ async function handleSaveAdd(e) {
       submitBtn.disabled = false;
       submitBtn.classList.remove('opacity-60', 'cursor-not-allowed');
     }
+  }
+}
+
+// TRANSFER / PINDAH DANA MODAL (Cash <-> Bank / Bank <-> Bank)
+function openTransferModal() {
+  const modal = document.getElementById('transferModal');
+  const dateInput = document.getElementById('transferDate');
+  if (dateInput) {
+    const now = new Date();
+    dateInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  }
+  const wb = window.currentWalletBalances || { cash: 0, bank: 0 };
+  const fromEl = document.getElementById('transferFromWallet');
+  const toEl = document.getElementById('transferToWallet');
+  if (fromEl && toEl) {
+    // Smart default: pull from whichever wallet has funds
+    if (wb.bank > 0) {
+      fromEl.value = 'bank';
+      toEl.value = 'cash';
+    } else {
+      fromEl.value = 'cash';
+      toEl.value = 'bank';
+    }
+  }
+  toggleTransferBankFields();
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeTransferModal() {
+  const modal = document.getElementById('transferModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function toggleTransferBankFields() {
+  const fromType = document.getElementById('transferFromWallet')?.value || 'bank';
+  const toType = document.getElementById('transferToWallet')?.value || 'cash';
+  const fromWrap = document.getElementById('transferFromBankWrap');
+  const toWrap = document.getElementById('transferToBankWrap');
+
+  if (fromWrap) fromWrap.classList.toggle('hidden', fromType !== 'bank');
+  if (toWrap) toWrap.classList.toggle('hidden', toType !== 'bank');
+  updateTransferBalanceHint();
+}
+
+function updateTransferBalanceHint() {
+  const hint = document.getElementById('transferBalanceHint');
+  if (!hint) return;
+  const wb = window.currentWalletBalances || { cash: 0, bank: 0, banks: [] };
+  const fromType = document.getElementById('transferFromWallet')?.value || 'bank';
+  const fromBank = document.getElementById('transferFromBank')?.value || '';
+
+  if (fromType === 'cash') {
+    hint.innerHTML = `Saldo <b>Cash</b> tersedia: <b class="tabular-nums text-slate-900 dark:text-slate-100">${formatRupiah(wb.cash)}</b>`;
+  } else if (fromBank) {
+    const found = (wb.banks || []).find(b => b.name === fromBank);
+    const bal = found ? found.balance : 0;
+    hint.innerHTML = `Saldo <b>Bank (${escapeHtml(fromBank)})</b> tersedia: <b class="tabular-nums text-slate-900 dark:text-slate-100">${formatRupiah(bal)}</b> · Total Bank: ${formatRupiah(wb.bank)}`;
+  } else {
+    hint.innerHTML = `Saldo <b>Bank</b> tersedia: <b class="tabular-nums text-slate-900 dark:text-slate-100">${formatRupiah(wb.bank)}</b>`;
+  }
+}
+
+async function handleSaveTransfer(e) {
+  e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  if (submitBtn && submitBtn.disabled) return;
+
+  const from_wallet_type = document.getElementById('transferFromWallet')?.value || 'bank';
+  const from_bank_name = from_wallet_type === 'bank' ? (document.getElementById('transferFromBank')?.value || '') : '';
+  const to_wallet_type = document.getElementById('transferToWallet')?.value || 'cash';
+  const to_bank_name = to_wallet_type === 'bank' ? (document.getElementById('transferToBank')?.value || '') : '';
+  const amount = document.getElementById('transferAmount')?.value;
+  const description = document.getElementById('transferDesc')?.value || '';
+  const occurred_on = document.getElementById('transferDate')?.value;
+
+  if (from_wallet_type === to_wallet_type && from_bank_name === to_bank_name) {
+    showToast('Sumber dana asal dan tujuan tidak boleh sama.', 'warning', 'Periksa Tujuan');
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.classList.add('opacity-60', 'cursor-not-allowed');
+  }
+
+  try {
+    const res = await api.post('/api/transactions/transfer', {
+      amount,
+      from_wallet_type,
+      from_bank_name,
+      to_wallet_type,
+      to_bank_name,
+      description,
+      occurred_on
+    });
+
+    if (res.success) {
+      closeTransferModal();
+      document.getElementById('transferForm').reset();
+      showToast(res.message || 'Pindah dana berhasil!', 'success', 'Pindah Dana');
+      loadDashboardData();
+      loadTransactions();
+    } else {
+      showToast(res.error || 'Gagal memindahkan dana.', 'warning', 'Saldo Tidak Cukup');
+    }
+  } catch (err) {
+    showToast('Terjadi kesalahan saat memproses pindah dana.', 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+    }
+  }
+}
+
+// MONTHLY BUDGET TARGET MODAL
+function getBudgetStorageKey() {
+  const email = currentUser?.email || 'default';
+  return `sakukampus_monthly_budget_${email}`;
+}
+
+function getSavedMonthlyBudget() {
+  const val = parseInt(localStorage.getItem(getBudgetStorageKey()) || '0', 10);
+  return Number.isFinite(val) && val > 0 ? val : 0;
+}
+
+function openBudgetModal() {
+  const modal = document.getElementById('budgetModal');
+  const input = document.getElementById('budgetAmountInput');
+  const saved = getSavedMonthlyBudget();
+  if (input) input.value = saved > 0 ? saved : '';
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeBudgetModal() {
+  const modal = document.getElementById('budgetModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function setBudgetPreset(amount) {
+  const input = document.getElementById('budgetAmountInput');
+  if (input) input.value = amount;
+}
+
+function handleSaveBudget(e) {
+  e.preventDefault();
+  const val = parseInt(document.getElementById('budgetAmountInput')?.value || '0', 10);
+  if (!Number.isFinite(val) || val < 10000) {
+    showToast('Target anggaran minimal Rp 10.000.', 'warning');
+    return;
+  }
+  localStorage.setItem(getBudgetStorageKey(), String(val));
+  closeBudgetModal();
+  showToast(`Batas anggaran bulanan diatur ke ${formatRupiah(val)}.`, 'success', 'Target Tersimpan');
+  if (typeof updateMonthlyBudgetCard === 'function') {
+    updateMonthlyBudgetCard(window.lastMonthlyExpense || 0, window.lastMonthlyIncome || 0);
+  }
+}
+
+function clearMonthlyBudget() {
+  localStorage.removeItem(getBudgetStorageKey());
+  closeBudgetModal();
+  showToast('Batas anggaran kustom telah direset.', 'info');
+  if (typeof updateMonthlyBudgetCard === 'function') {
+    updateMonthlyBudgetCard(window.lastMonthlyExpense || 0, window.lastMonthlyIncome || 0);
   }
 }
 
@@ -316,16 +566,33 @@ async function checkAuth() {
   }
 }
 
-// Logout (F-01)
-async function handleLogout() {
-  if (confirm('Apakah Anda yakin ingin keluar dari SakuKampus?')) {
-    try {
-      await api.post('/auth/logout', {});
-    } catch {
-      // ignore
-    }
-    window.location.href = '/login.html';
+// Logout Confirmation Modal (replaces native browser confirm dialog)
+function handleLogout() {
+  const modal = document.getElementById('logoutModal');
+  if (modal) {
+    modal.classList.remove('hidden');
   }
+}
+
+function closeLogoutModal() {
+  const modal = document.getElementById('logoutModal');
+  if (modal) {
+    modal.classList.add('hidden');
+  }
+}
+
+async function confirmLogout() {
+  const btn = document.getElementById('btnConfirmLogout');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Keluar...';
+  }
+  try {
+    await api.post('/auth/logout', {});
+  } catch {
+    // ignore
+  }
+  window.location.href = '/login.html';
 }
 
 // Dark / Light Theme Support (Defaults to Crisp Clean White)

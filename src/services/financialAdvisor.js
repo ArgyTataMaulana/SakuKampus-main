@@ -1,5 +1,6 @@
 import { supabase, getCategoriesMap } from '../config/supabase.js';
 import { aiGenerateText, getActiveProvider } from './aiProvider.js';
+import { computeWalletBalances, parseWalletFromRow } from './walletHelper.js';
 
 function formatRupiah(num) {
   return new Intl.NumberFormat('id-ID', {
@@ -76,7 +77,12 @@ export async function getUserFinancialContext(userId) {
     getCategoriesMap()
   ]);
 
-  const rows = (txData || []).map((row) => {
+  const rawRows = txData || [];
+  const walletSummary = computeWalletBalances(rawRows, categoriesById);
+
+  const rows = rawRows
+    .filter((row) => !parseWalletFromRow(row).is_transfer)
+    .map((row) => {
     const cat = categoriesById.get(String(row.category_id));
     return {
       amount: Number(row.amount) || 0,
@@ -165,6 +171,7 @@ export async function getUserFinancialContext(userId) {
 
   return {
     currentBalance,
+    walletSummary,
     monthlyInc,
     monthlyExp,
     netCashFlow,
@@ -285,15 +292,20 @@ export function handleRuleBasedAdvice(text, context) {
   if (clean.includes('saldo') || clean.includes('uang saya') || clean.includes('keuangan')) {
     const netFlow = context.monthlyInc - context.monthlyExp;
     const flowText = netFlow >= 0 ? `Surplus +${formatRupiah(netFlow)} 🟢` : `Defisit -${formatRupiah(Math.abs(netFlow))} 🔴`;
+    const ws = context.walletSummary || { cashBalance: 0, bankBalance: 0, banks: [] };
+    const bankDetails = ws.banks && ws.banks.length > 0
+      ? ` (${ws.banks.map(b => `${b.name}: ${formatRupiah(b.balance)}`).join(', ')})`
+      : '';
 
     return `💳 **Ringkasan Saldo & Arus Kas Keuangan Anda:**\n\n` +
       `• **Total Saldo Saat Ini**: **${formatRupiah(context.currentBalance)}**\n` +
+      `  — 💵 **Cash (Tunai)**: ${formatRupiah(ws.cashBalance)}\n` +
+      `  — 🏦 **Bank**: ${formatRupiah(ws.bankBalance)}${bankDetails}\n` +
       `• **Pemasukan Bulan Ini**: ${formatRupiah(context.monthlyInc)}\n` +
       `• **Pengeluaran Bulan Ini**: ${formatRupiah(context.monthlyExp)}\n` +
       `• **Arus Kas Bersih (Net)**: ${flowText}\n` +
       `• **Batas Pengeluaran Aman**: **${safeDaily}/hari** *(selama sisa ${sisaHari} hari)*\n\n` +
-      `📊 Grafik tren dan donat kategori selengkapnya dapat dilihat di menu **Dashboard**.\n\n` +
-      `Ingin tahu kategori apa yang paling menyerap anggaranmu? Ketik *"pengeluaran terbesar"*!`;
+      `📊 Grafik dan rincian lengkap dapat dilihat di menu **Dashboard**.`;
   }
 
   // 6. PENGELUARAN TERBESAR / BOROS DI MANA
@@ -386,6 +398,11 @@ export async function getGeminiConsultationResponse(userQuestion, context) {
   const now = new Date();
   const safeDaily = formatRupiah(context.safeDailyBudget || 0);
 
+  const ws = context.walletSummary || { cashBalance: 0, bankBalance: 0, banks: [] };
+  const bankBreakdownStr = ws.banks && ws.banks.length > 0
+    ? ws.banks.map(b => `${b.name}: ${formatRupiah(b.balance)}`).join(', ')
+    : 'Belum ada rincian per bank';
+
   const prompt = `Anda adalah SakuBot, asisten dan konsultan finansial cerdas, proaktif, dan serba bisa untuk mahasiswa Universitas Muhammadiyah Yogyakarta (UMY).
 
 [IDENTITAS & KARAKTER SAKUBOT]
@@ -422,6 +439,8 @@ ${customInstructions ? `[INSTRUKSI TAMBAHAN KHUSUS DARI PENGGUNA]\n${customInstr
 - Tanggal Hari Ini: ${now.toISOString().split('T')[0]} (Hari ke-${context.currentDay} dari ${context.daysInMonth} hari)
 - Sisa Hari Bulan Ini: ${context.remainingDays} hari
 - Total Saldo Riil Saat Ini: ${formatRupiah(context.currentBalance)}
+- Rincian Saldo Cash (Tunai): ${formatRupiah(ws.cashBalance)}
+- Rincian Saldo Bank: ${formatRupiah(ws.bankBalance)} (${bankBreakdownStr})
 - Pemasukan Bulan Ini: ${formatRupiah(context.monthlyInc)}
 - Pengeluaran Bulan Ini: ${formatRupiah(context.monthlyExp)}
 - Arus Kas Bersih (Net): ${formatRupiah(context.netCashFlow)}

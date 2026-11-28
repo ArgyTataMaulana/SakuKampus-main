@@ -1,6 +1,14 @@
 import express from 'express';
 import { supabase, getAllCategories, getCategoriesMap } from '../config/supabase.js';
 import { authMiddleware } from '../middlewares/auth.js';
+import {
+  normalizeWallet,
+  encodeRawTextWithWallet,
+  encodeRawTextWithTransfer,
+  parseWalletFromRow,
+  computeWalletBalances,
+  validateExpenseAgainstBalances
+} from '../services/walletHelper.js';
 
 export const transactionsRouter = express.Router();
 
@@ -18,13 +26,135 @@ function isValidDateStr(dateStr) {
 }
 
 function enrichTransaction(row, categoriesById) {
+  const wallet = parseWalletFromRow(row);
+  if (wallet.is_transfer) {
+    return {
+      ...row,
+      raw_text: wallet.clean_raw_text,
+      is_transfer: true,
+      category_name: 'Pindah Dana',
+      category_type: 'transfer',
+      wallet_type: 'transfer',
+      bank_name: '',
+      wallet_label: wallet.wallet_label,
+      from_wallet: wallet.from,
+      to_wallet: wallet.to
+    };
+  }
+
   const category = categoriesById.get(String(row.category_id));
   return {
     ...row,
+    raw_text: wallet.clean_raw_text,
+    is_transfer: false,
     category_name: category?.name || 'Lain-lain',
-    category_type: category?.type || 'expense'
+    category_type: category?.type || 'expense',
+    wallet_type: wallet.wallet_type,
+    bank_name: wallet.bank_name,
+    wallet_label: wallet.wallet_label
   };
 }
+
+/**
+ * POST /api/transactions/transfer
+ * Move funds between Cash and Bank (or between Banks) without affecting income/expense totals
+ */
+transactionsRouter.post('/transfer', authMiddleware, async (req, res) => {
+  const userId = req.user.id;
+  const {
+    amount,
+    from_wallet_type = 'bank',
+    from_bank_name = '',
+    to_wallet_type = 'cash',
+    to_bank_name = '',
+    description = '',
+    occurred_on
+  } = req.body;
+
+  const numAmount = Number(amount);
+  if (!Number.isFinite(numAmount) || numAmount <= 0 || numAmount > MAX_TRANSACTION_AMOUNT) {
+    return res.status(400).json({ error: `Nominal pindah dana harus antara Rp 1 dan Rp ${MAX_TRANSACTION_AMOUNT.toLocaleString('id-ID')}.` });
+  }
+
+  if (occurred_on && !isValidDateStr(occurred_on)) {
+    return res.status(400).json({ error: 'Format tanggal tidak valid (gunakan YYYY-MM-DD).' });
+  }
+
+  const from = normalizeWallet(from_wallet_type, from_bank_name);
+  const to = normalizeWallet(to_wallet_type, to_bank_name);
+
+  if (from.wallet_type === to.wallet_type && from.bank_name === to.bank_name) {
+    return res.status(400).json({ error: 'Sumber dana asal dan tujuan tidak boleh sama.' });
+  }
+
+  try {
+    const [categoriesById, allCategories, { data: userTxRows, error: fetchErr }] = await Promise.all([
+      getCategoriesMap(),
+      getAllCategories(),
+      supabase
+        .from('transactions')
+        .select('id, category_id, amount, description, raw_text')
+        .eq('user_id', userId)
+    ]);
+
+    if (fetchErr) {
+      return res.status(503).json({ error: 'Gagal memverifikasi saldo di database cloud.' });
+    }
+
+    const roundedAmount = Math.round(numAmount);
+    const balances = computeWalletBalances(userTxRows || [], categoriesById);
+
+    const check = validateExpenseAgainstBalances({
+      amount: roundedAmount,
+      wallet_type: from.wallet_type,
+      bank_name: from.bank_name,
+      balances,
+      explicitWallet: true
+    });
+
+    if (!check.ok) {
+      return res.status(400).json({ success: false, error: check.reason, code: check.code });
+    }
+
+    const fallbackCat = allCategories.find((c) => c.name === 'Lain-lain pengeluaran') || allCategories[0];
+    const cleanDesc = description && String(description).trim()
+      ? String(description).trim().slice(0, 200)
+      : (from.wallet_type === 'bank' && to.wallet_type === 'cash'
+        ? `Tarik tunai dari ${from.wallet_label}`
+        : `Pindah dana ${from.wallet_label} → ${to.wallet_label}`);
+
+    const rawTextEncoded = encodeRawTextWithTransfer(cleanDesc, from, to);
+
+    const { data: inserted, error } = await supabase
+      .from('transactions')
+      .insert({
+        user_id: userId,
+        category_id: fallbackCat.id,
+        amount: roundedAmount,
+        description: cleanDesc,
+        raw_text: rawTextEncoded,
+        source: 'chat',
+        parsed_by: 'rule',
+        occurred_on: occurred_on || getLocalTodayStr()
+      })
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('[Transfer] Insert error:', error.message);
+      return res.status(503).json({ error: 'Gagal menyimpan pindah dana ke database cloud.' });
+    }
+
+    return res.json({
+      success: true,
+      message: `Dana berhasil dipindahkan (${from.wallet_label} → ${to.wallet_label}).`,
+      data: enrichTransaction(inserted, categoriesById)
+    });
+  } catch (err) {
+    console.error('[Transfer] Error:', err.message);
+    return res.status(503).json({ error: 'Gagal memproses pindah dana.' });
+  }
+});
 
 /**
  * GET /api/transactions/meta/categories
@@ -42,10 +172,10 @@ transactionsRouter.get('/meta/categories', async (req, res) => {
 
 /**
  * GET /api/transactions
- * Retrieve transaction history with filtering & search from Supabase (F-05, F-08)
+ * Retrieve transaction history with filtering & search from Supabase
  */
 transactionsRouter.get('/', authMiddleware, async (req, res) => {
-  const { type, category_id, start_date, end_date, search, limit = 100 } = req.query;
+  const { type, category_id, wallet_type, start_date, end_date, search, limit = 100 } = req.query;
 
   if (start_date && end_date && start_date > end_date) {
     return res.status(400).json({ error: 'Tanggal mulai tidak boleh lebih besar dari tanggal akhir.' });
@@ -79,7 +209,8 @@ transactionsRouter.get('/', authMiddleware, async (req, res) => {
     const rows = (cloudRows || [])
       .map((row) => enrichTransaction(row, categoriesById))
       .filter((row) => (!type || row.category_type === type))
-      .filter((row) => !searchTerm || [row.description, row.raw_text, row.category_name]
+      .filter((row) => (!wallet_type || row.wallet_type === wallet_type))
+      .filter((row) => !searchTerm || [row.description, row.raw_text, row.category_name, row.wallet_label]
         .some((value) => String(value || '').toLocaleLowerCase('id-ID').includes(searchTerm)))
       .slice(0, maxRows);
 
@@ -92,11 +223,11 @@ transactionsRouter.get('/', authMiddleware, async (req, res) => {
 
 /**
  * POST /api/transactions
- * Create a new transaction manually in Supabase (F-08, F-10)
+ * Create a new transaction manually in Supabase with balance guard & wallet tagging
  */
 transactionsRouter.post('/', authMiddleware, async (req, res) => {
   const userId = req.user.id;
-  const { amount, category_id, description, occurred_on } = req.body;
+  const { amount, category_id, description, occurred_on, wallet_type = 'cash', bank_name = '' } = req.body;
 
   const numAmount = Number(amount);
   if (!Number.isFinite(numAmount) || numAmount <= 0 || numAmount > MAX_TRANSACTION_AMOUNT) {
@@ -108,13 +239,47 @@ transactionsRouter.post('/', authMiddleware, async (req, res) => {
   }
 
   try {
-    const categoriesById = await getCategoriesMap();
+    const [categoriesById, { data: userTxRows, error: fetchErr }] = await Promise.all([
+      getCategoriesMap(),
+      supabase
+        .from('transactions')
+        .select('id, category_id, amount, description, raw_text')
+        .eq('user_id', userId)
+    ]);
+
+    if (fetchErr) {
+      return res.status(503).json({ error: 'Gagal memverifikasi saldo di database cloud.' });
+    }
+
     const category = categoriesById.get(String(category_id));
     if (!category) {
       return res.status(400).json({ error: 'Kategori tidak valid.' });
     }
 
     const roundedAmount = Math.round(numAmount);
+    const wallet = normalizeWallet(wallet_type, bank_name);
+
+    // Balance logic guard: block expense if balance is 0 or insufficient
+    if (category.type === 'expense') {
+      const balances = computeWalletBalances(userTxRows || [], categoriesById);
+      const check = validateExpenseAgainstBalances({
+        amount: roundedAmount,
+        wallet_type: wallet.wallet_type,
+        bank_name: wallet.bank_name,
+        balances,
+        explicitWallet: true
+      });
+      if (!check.ok) {
+        return res.status(400).json({ success: false, error: check.reason, code: check.code });
+      }
+    }
+
+    const rawTextEncoded = encodeRawTextWithWallet(
+      `Manual: ${category.name} ${roundedAmount}`,
+      wallet.wallet_type,
+      wallet.bank_name
+    );
+
     const { data: inserted, error } = await supabase
       .from('transactions')
       .insert({
@@ -122,7 +287,7 @@ transactionsRouter.post('/', authMiddleware, async (req, res) => {
         category_id: category.id,
         amount: roundedAmount,
         description: description ? String(description).trim().slice(0, 200) : `Transaksi ${category.name}`,
-        raw_text: `Manual: ${category.name} ${roundedAmount}`,
+        raw_text: rawTextEncoded,
         source: 'chat',
         parsed_by: 'rule',
         occurred_on: occurred_on || getLocalTodayStr()
@@ -178,12 +343,12 @@ transactionsRouter.get('/:id', authMiddleware, async (req, res) => {
 
 /**
  * PUT /api/transactions/:id
- * Edit transaction in Supabase (F-10, F-08)
+ * Edit transaction in Supabase with balance consistency validation
  */
 transactionsRouter.put('/:id', authMiddleware, async (req, res) => {
   const userId = req.user.id;
   const txId = req.params.id;
-  const { amount, category_id, description, occurred_on } = req.body;
+  const { amount, category_id, description, occurred_on, wallet_type, bank_name } = req.body;
 
   const numAmount = Number(amount);
   if (!Number.isFinite(numAmount) || numAmount <= 0 || numAmount > MAX_TRANSACTION_AMOUNT) {
@@ -195,18 +360,77 @@ transactionsRouter.put('/:id', authMiddleware, async (req, res) => {
   }
 
   try {
-    const categoriesById = await getCategoriesMap();
+    const [categoriesById, { data: userTxRows, error: fetchErr }] = await Promise.all([
+      getCategoriesMap(),
+      supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', userId)
+    ]);
+
+    if (fetchErr) {
+      return res.status(503).json({ error: 'Gagal memverifikasi data di database cloud.' });
+    }
+
+    const existing = (userTxRows || []).find((r) => String(r.id) === String(txId));
+    if (!existing) {
+      return res.status(404).json({ error: 'Transaksi tidak ditemukan atau Anda tidak memiliki akses.' });
+    }
+
     const category = categoriesById.get(String(category_id));
     if (!category) {
       return res.status(400).json({ error: 'Kategori tidak valid.' });
     }
 
+    const roundedAmount = Math.round(numAmount);
+    const existingWallet = parseWalletFromRow(existing);
+    if (existingWallet.is_transfer) {
+      return res.status(400).json({
+        success: false,
+        error: 'Transaksi pindah dana tidak dapat diubah secara langsung. Hapus lalu catat ulang jika perlu.'
+      });
+    }
+    const nextWallet = wallet_type
+      ? normalizeWallet(wallet_type, bank_name !== undefined ? bank_name : existingWallet.bank_name)
+      : existingWallet;
+
+    // Validate balance after replacing this transaction
+    const balancesWithoutCurrent = computeWalletBalances(userTxRows || [], categoriesById, txId);
+    if (category.type === 'expense') {
+      const check = validateExpenseAgainstBalances({
+        amount: roundedAmount,
+        wallet_type: nextWallet.wallet_type,
+        bank_name: nextWallet.bank_name,
+        balances: balancesWithoutCurrent,
+        explicitWallet: true
+      });
+      if (!check.ok) {
+        return res.status(400).json({ success: false, error: check.reason, code: check.code });
+      }
+    } else {
+      // Income edit: ensure reducing income doesn't cause negative total balance
+      const projectedTotal = balancesWithoutCurrent.totalBalance + roundedAmount;
+      if (projectedTotal < 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Nominal pemasukan ini tidak dapat dikurangi di bawah total pengeluaran yang sudah tercatat.'
+        });
+      }
+    }
+
+    const updatedRawText = encodeRawTextWithWallet(
+      existingWallet.clean_raw_text || `Manual: ${category.name} ${roundedAmount}`,
+      nextWallet.wallet_type,
+      nextWallet.bank_name
+    );
+
     const { data: updated, error } = await supabase
       .from('transactions')
       .update({
-        amount: Math.round(numAmount),
+        amount: roundedAmount,
         category_id: category.id,
         description: description ? String(description).trim().slice(0, 200) : 'Transaksi',
+        raw_text: updatedRawText,
         occurred_on: occurred_on || getLocalTodayStr(),
         updated_at: new Date().toISOString()
       })
@@ -218,10 +442,6 @@ transactionsRouter.put('/:id', authMiddleware, async (req, res) => {
     if (error) {
       console.error('[Transactions] Update error:', error.message);
       return res.status(503).json({ error: 'Gagal memperbarui transaksi di database cloud.' });
-    }
-
-    if (!updated) {
-      return res.status(404).json({ error: 'Transaksi tidak ditemukan atau Anda tidak memiliki akses.' });
     }
 
     return res.json({
@@ -237,10 +457,47 @@ transactionsRouter.put('/:id', authMiddleware, async (req, res) => {
 
 /**
  * DELETE /api/transactions/:id
- * Delete transaction from Supabase (F-10, F-08)
+ * Delete transaction from Supabase (blocks deleting income if funds are already spent)
  */
 transactionsRouter.delete('/:id', authMiddleware, async (req, res) => {
   try {
+    const [categoriesById, { data: userTxRows, error: fetchErr }] = await Promise.all([
+      getCategoriesMap(),
+      supabase
+        .from('transactions')
+        .select('id, category_id, amount, description, raw_text')
+        .eq('user_id', req.user.id)
+    ]);
+
+    if (fetchErr) {
+      return res.status(503).json({ error: 'Gagal memverifikasi transaksi di database cloud.' });
+    }
+
+    const target = (userTxRows || []).find((r) => String(r.id) === String(req.params.id));
+    if (!target) {
+      return res.status(404).json({ error: 'Transaksi tidak ditemukan atau Anda tidak memiliki akses.' });
+    }
+
+    const targetWallet = parseWalletFromRow(target);
+    const targetCat = categoriesById.get(String(target.category_id));
+    if (targetWallet.is_transfer) {
+      const remainingBalances = computeWalletBalances(userTxRows || [], categoriesById, target.id);
+      if (remainingBalances.cashBalance < 0 || remainingBalances.bankBalance < 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Catatan pindah dana ini tidak dapat dihapus karena dananya di dompet tujuan sudah terpakai.'
+        });
+      }
+    } else if (targetCat?.type === 'income') {
+      const remainingBalances = computeWalletBalances(userTxRows || [], categoriesById, target.id);
+      if (remainingBalances.totalBalance < 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Pemasukan ini tidak dapat dihapus karena saldonya sudah terpakai oleh transaksi pengeluaran.'
+        });
+      }
+    }
+
     const { data: deleted, error } = await supabase
       .from('transactions')
       .delete()

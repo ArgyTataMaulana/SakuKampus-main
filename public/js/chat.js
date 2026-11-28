@@ -70,14 +70,16 @@ async function handleSendFloatingChat(event) {
   const message = input.value.trim();
   if (!message) return;
 
+  const source = input.dataset.inputSource === 'voice' ? 'voice' : 'chat';
   input.value = '';
+  input.dataset.inputSource = 'chat';
 
   // Append user bubble to floating chat
   appendFloatingUserMessage(message);
   const typingId = appendFloatingTyping();
 
   try {
-    const res = await api.post('/api/chat', { message, source: 'chat' });
+    const res = await api.post('/api/chat', { message, source });
     removeFloatingTyping(typingId);
 
     // Update Quota Tag & Sidebar
@@ -86,6 +88,12 @@ async function handleSendFloatingChat(event) {
     if (res.is_rate_limited) {
       appendFloatingBotMessage(res.message, 'warning');
       showToast('Batas kuota chat tercapai.', 'warning');
+      return;
+    }
+
+    if (res.is_insufficient_balance) {
+      appendFloatingBotMessage(res.bot_reply, 'warning');
+      showToast('Saldo tidak mencukupi untuk mencatat pengeluaran ini.', 'warning', 'Saldo Kurang');
       return;
     }
 
@@ -101,11 +109,11 @@ async function handleSendFloatingChat(event) {
 
     if (res.success && res.transaction) {
       appendFloatingBotSuccess(res.transaction);
-      showToast(`Transaksi ${res.transaction.category_name} berhasil dicatat!`, 'success');
+      showToast(`Transaksi ${res.transaction.category_name} (${res.transaction.wallet_label || 'Cash'}) berhasil dicatat!`, 'success');
       loadDashboardData();
       loadTransactions();
     } else {
-      appendFloatingBotMessage('Maaf, terjadi kesalahan.', 'error');
+      appendFloatingBotMessage(res.error || 'Maaf, terjadi kesalahan.', 'error');
     }
 
   } catch (err) {
@@ -191,25 +199,27 @@ function appendFloatingBotSuccess(tx) {
   const div = document.createElement('div');
   div.className = 'flex items-start gap-2 fade-in';
 
+  const isTransfer = tx.category_type === 'transfer' || tx.is_transfer;
   const isIncome = tx.category_type === 'income';
-  const amountColor = isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400';
-  const prefix = isIncome ? '+' : '-';
+  const amountColor = isTransfer
+    ? 'text-bauhaus-blue dark:text-bauhaus-yellow'
+    : (isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400');
+  const prefix = isTransfer ? '↔ ' : (isIncome ? '+' : '-');
+  const editBtn = isTransfer ? '' : `<button onclick="openEditModal(${tx.id})" class="btn-block-outline !py-1 !px-2 text-[10px]">Ubah</button>`;
 
   div.innerHTML = `
     <div class="sakubot-avatar w-6 h-6 rounded-lg text-[10px] shrink-0 mt-0.5">
-      <i class="fa-solid fa-check"></i>
+      <i class="fa-solid ${isTransfer ? 'fa-arrow-right-arrow-left' : 'fa-check'}"></i>
     </div>
     <div class="max-w-[85%] bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl chat-bubble-bot text-xs leading-relaxed shadow-sm space-y-1.5 font-sans">
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between gap-2">
         <span class="font-bold text-slate-900 dark:text-slate-100">${escapeHtml(tx.category_name)}</span>
-        <span class="text-[10px] text-slate-400 dark:text-slate-500">${tx.occurred_on}</span>
+        <span class="badge-sand text-[9px]">${escapeHtml(tx.wallet_label || 'Cash')}</span>
       </div>
       <p class="text-sm font-extrabold ${amountColor} tabular-nums">${prefix}${formatRupiah(tx.amount)}</p>
-      <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">${escapeHtml(tx.description)}</p>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">${escapeHtml(tx.description)} · ${tx.occurred_on}</p>
       <div class="pt-1.5 flex gap-1.5 border-t border-slate-200 dark:border-slate-700">
-        <button onclick="openEditModal(${tx.id})" class="btn-block-outline !py-1 !px-2 text-[10px]">
-          Ubah
-        </button>
+        ${editBtn}
         <button onclick="openDeleteModal(${tx.id})" class="btn-block-danger !py-1 !px-2 text-[10px]">
           Hapus
         </button>
@@ -228,13 +238,16 @@ function setChatInput(text) {
   const input = document.getElementById('chatInputText');
   if (input) {
     input.value = text;
+    input.dataset.inputSource = 'chat';
     input.focus();
   }
 }
 
 async function handleSendChat(event) {
   if (event) event.preventDefault();
-  handleSendChatWithSource('chat');
+  const input = document.getElementById('chatInputText');
+  const source = input && input.dataset.inputSource === 'voice' ? 'voice' : 'chat';
+  handleSendChatWithSource(source);
 }
 
 async function handleSendChatWithSource(source = 'chat') {
@@ -242,8 +255,9 @@ async function handleSendChatWithSource(source = 'chat') {
   const message = input.value.trim();
   if (!message) return;
 
-  // Clear input
+  // Clear input and reset source marker
   input.value = '';
+  input.dataset.inputSource = 'chat';
 
   // Append user bubble
   appendUserMessage(message, source);
@@ -255,12 +269,18 @@ async function handleSendChatWithSource(source = 'chat') {
     const res = await api.post('/api/chat', { message, source });
     removeTypingIndicator(typingId);
 
-    // Update Quota Tag & Sidebar (F-09)
+    // Update Quota Tag & Sidebar
     updateQuotaUI(res.usage);
 
     if (res.is_rate_limited) {
       appendBotMessage(res.message, 'warning');
-      showToast('Batas kuota pesan harian tercapai (F-09).', 'warning');
+      showToast('Batas kuota pesan harian tercapai.', 'warning');
+      return;
+    }
+
+    if (res.is_insufficient_balance) {
+      appendBotMessage(res.bot_reply, 'warning');
+      showToast('Saldo tidak mencukupi untuk mencatat pengeluaran ini.', 'warning', 'Saldo Kurang');
       return;
     }
 
@@ -276,12 +296,12 @@ async function handleSendChatWithSource(source = 'chat') {
 
     if (res.success && res.transaction) {
       appendBotTransactionSuccess(res.bot_reply, res.transaction);
-      showToast(`Transaksi ${res.transaction.category_name} berhasil dicatat!`, 'success');
+      showToast(`Transaksi ${res.transaction.category_name} (${res.transaction.wallet_label || 'Cash'}) berhasil dicatat!`, 'success');
       // Refresh dashboard & transaction table in background
       loadDashboardData();
       loadTransactions();
     } else {
-      appendBotMessage('Maaf, terjadi kesalahan saat memproses permintaan.', 'error');
+      appendBotMessage(res.error || 'Maaf, terjadi kesalahan saat memproses permintaan.', 'error');
     }
 
   } catch (err) {
@@ -297,16 +317,30 @@ function updateQuotaUI(usage) {
 
   const sidebarQuotaText = document.getElementById('sidebarQuotaText');
   const sidebarQuotaBar = document.getElementById('sidebarQuotaBar');
+  const dashboardQuotaBar = document.getElementById('dashboardQuotaBar');
+  const numericLimit = Number(usage.limit) || 50;
+  const usedPct = Math.max(0, Math.min(100, (usage.used / numericLimit) * 100));
+  const remPct = Math.max(0, Math.min(100, (usage.remaining / numericLimit) * 100));
+
   if (sidebarQuotaText) sidebarQuotaText.textContent = `${usage.used}/${usage.limit}`;
   if (sidebarQuotaBar) {
-    const pct = Math.max(0, Math.min(100, (usage.used / usage.limit) * 100));
-    sidebarQuotaBar.style.width = `${pct}%`;
-    if (pct >= 90) {
-      sidebarQuotaBar.className = 'bg-red-500 h-1.5 rounded-full transition-all duration-300';
-    } else if (pct >= 70) {
-      sidebarQuotaBar.className = 'bg-amber-500 h-1.5 rounded-full transition-all duration-300';
+    sidebarQuotaBar.style.width = `${usedPct}%`;
+    if (usedPct >= 90) {
+      sidebarQuotaBar.className = 'bg-bauhaus-red h-full transition-all duration-300';
+    } else if (usedPct >= 70) {
+      sidebarQuotaBar.className = 'bg-bauhaus-yellow h-full transition-all duration-300';
     } else {
-      sidebarQuotaBar.className = 'bg-brand-600 h-1.5 rounded-full transition-all duration-300';
+      sidebarQuotaBar.className = 'bg-bauhaus-blue h-full transition-all duration-300';
+    }
+  }
+  if (dashboardQuotaBar) {
+    dashboardQuotaBar.style.width = `${remPct}%`;
+    if (remPct <= 10) {
+      dashboardQuotaBar.className = 'bg-bauhaus-red h-full transition-all duration-300';
+    } else if (remPct <= 30) {
+      dashboardQuotaBar.className = 'bg-bauhaus-yellow h-full transition-all duration-300';
+    } else {
+      dashboardQuotaBar.className = 'bg-bauhaus-blue h-full transition-all duration-300';
     }
   }
 
@@ -400,35 +434,48 @@ function appendBotTransactionSuccess(botReply, tx) {
   const div = document.createElement('div');
   div.className = 'flex items-start gap-3 fade-in';
 
+  const isTransfer = tx.category_type === 'transfer' || tx.is_transfer;
   const isIncome = tx.category_type === 'income';
-  const prefix = isIncome ? '+' : '-';
-  const amountColor = isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400';
-  const badgeClass = isIncome ? 'badge-sand font-bold text-emerald-600 dark:text-emerald-400' : 'badge-sand font-medium';
+  const prefix = isTransfer ? '↔ ' : (isIncome ? '+' : '-');
+  const amountColor = isTransfer
+    ? 'text-bauhaus-blue dark:text-bauhaus-yellow'
+    : (isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400');
+  const badgeClass = isTransfer
+    ? 'badge-accent font-bold'
+    : (isIncome ? 'badge-sand font-bold text-emerald-600 dark:text-emerald-400' : 'badge-sand font-medium');
+  const typeLabel = isTransfer ? 'Pindah Dana' : `${isIncome ? 'Pemasukan' : 'Pengeluaran'} · ${escapeHtml(tx.category_name)}`;
+  const editBtn = isTransfer
+    ? ''
+    : `<button onclick="openEditModal(${tx.id})" class="btn-block-outline !py-1.5 !px-3 text-xs"><i class="fa-solid fa-pen-to-square text-brand-600" aria-hidden="true"></i> Ubah</button>`;
 
   div.innerHTML = `
     <div class="sakubot-avatar w-8 h-8 rounded-xl text-xs shrink-0 mt-1">
-      <i class="fa-solid fa-check"></i>
+      <i class="fa-solid ${isTransfer ? 'fa-arrow-right-arrow-left' : 'fa-check'}"></i>
     </div>
     <div class="max-w-[85%] bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl chat-bubble-bot text-sm leading-relaxed shadow-sm space-y-3 font-sans">
       <div>
-        <span class="${badgeClass} mb-1 inline-block">
-          ${isIncome ? 'Pemasukan' : 'Pengeluaran'} · ${escapeHtml(tx.category_name)}
-        </span>
+        <div class="flex flex-wrap items-center gap-1.5 mb-1">
+          <span class="${badgeClass} inline-block">
+            ${typeLabel}
+          </span>
+          <span class="badge-dirt inline-block">
+            <i class="fa-solid ${isTransfer ? 'fa-arrow-right-arrow-left' : (tx.wallet_type === 'bank' ? 'fa-building-columns' : 'fa-money-bill-wave')} text-[9px]" aria-hidden="true"></i>
+            ${escapeHtml(tx.wallet_label || 'Cash')}
+          </span>
+        </div>
         <h4 class="font-bold text-slate-900 dark:text-slate-100 text-base">${escapeHtml(tx.description)}</h4>
         <p class="text-xl font-extrabold ${amountColor} tabular-nums mt-1">${prefix}${formatRupiah(tx.amount)}</p>
         <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1.5">
           <i class="fa-regular fa-calendar" aria-hidden="true"></i>
           <span>${tx.occurred_on}</span>
           <span>·</span>
-          <span>${tx.parsed_by && (tx.parsed_by.startsWith('ai') || tx.parsed_by === 'llm') ? (tx.parsed_by.includes('groq') ? 'AI Groq' : (tx.parsed_by.includes('gemini') || tx.parsed_by === 'llm' ? 'AI Gemini' : 'AI')) : 'Aturan'}</span>
+          <span>${isTransfer ? 'Tidak mengubah total pengeluaran' : (tx.parsed_by && (tx.parsed_by.startsWith('ai') || tx.parsed_by === 'llm') ? (tx.parsed_by.includes('groq') ? 'AI Groq' : (tx.parsed_by.includes('gemini') || tx.parsed_by === 'llm' ? 'AI Gemini' : 'AI')) : 'Aturan')}</span>
         </p>
       </div>
 
-      <!-- Quick Action Buttons right inside chat (F-10) -->
+      <!-- Quick Action Buttons right inside chat -->
       <div class="pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center gap-2">
-        <button onclick="openEditModal(${tx.id})" class="btn-block-outline !py-1.5 !px-3 text-xs">
-          <i class="fa-solid fa-pen-to-square text-brand-600" aria-hidden="true"></i> Ubah
-        </button>
+        ${editBtn}
         <button onclick="openDeleteModal(${tx.id})" class="btn-block-danger !py-1.5 !px-3 text-xs">
           <i class="fa-solid fa-trash-can" aria-hidden="true"></i> Hapus
         </button>

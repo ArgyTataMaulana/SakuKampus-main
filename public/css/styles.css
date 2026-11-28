@@ -105,29 +105,18 @@ table, input, select, textarea, .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
 
-/* ─── Bauhaus Constructivist Cards ─── */
+/* ─── Architectural Display Cards (Static Panels — Distinct from Buttons) ─── */
 .craft-card {
   border: 2px solid var(--bauhaus-dark);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-hard);
+  box-shadow: none;
   background-color: #FFFFFF;
-  transition: transform var(--transition), box-shadow var(--transition);
-}
-
-.craft-card:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: var(--shadow-hard-lg);
 }
 
 .dark .craft-card {
-  border: 2px solid var(--night-border) !important;
+  border: 1.5px solid #2E2E38 !important;
   background-color: var(--night-card) !important;
-  box-shadow: 4px 4px 0px 0px var(--bauhaus-yellow) !important;
-}
-
-.dark .craft-card:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 6px 6px 0px 0px var(--bauhaus-yellow) !important;
+  box-shadow: none !important;
 }
 
 /* ─── Bauhaus Mechanical Buttons ─── */
@@ -290,27 +279,26 @@ a.bg-brand-600:active,
   box-shadow: 2px 2px 0px 0px #FFFFFF !important;
 }
 
-/* ─── Bauhaus Quota Bar Track ─── */
+/* ─── Quota Progress Bar Track ─── */
 .quota-bar-track {
   width: 100%;
-  height: 10px;
-  background: #FFFFFF;
-  border: 2px solid var(--bauhaus-dark);
+  height: 8px;
+  background: var(--slate-100);
+  border: 1px solid rgba(18, 18, 18, 0.2);
   border-radius: 0px;
   overflow: hidden;
-  box-shadow: 1px 1px 0px #121212;
 }
 
 .dark .quota-bar-track {
   background: var(--night-card2);
-  border-color: var(--night-border);
+  border-color: #383842;
 }
 
-#sidebarQuotaBar {
+#sidebarQuotaBar,
+#dashboardQuotaBar {
   height: 100%;
   border-radius: 0px;
-  background: var(--bauhaus-blue) !important;
-  transition: width 200ms ease;
+  transition: width 250ms ease, background-color 200ms ease;
 }
 
 /* ─── Chat Bubbles (Bauhaus Geometric Panels) ─── */
@@ -375,30 +363,6 @@ a.bg-brand-600:active,
   box-shadow: none !important;
 }
 
-/* ─── Feature Label Chips (F-01 .. F-10) ─── */
-.feat-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 8px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border-radius: 9999px;
-  background: var(--bauhaus-yellow);
-  color: var(--bauhaus-dark);
-  border: 1.5px solid var(--bauhaus-dark);
-  box-shadow: 1px 1px 0px 0px var(--bauhaus-dark);
-}
-.dark .feat-chip {
-  background: var(--bauhaus-yellow);
-  color: var(--bauhaus-dark);
-  border-color: var(--night-border);
-  box-shadow: 1px 1px 0px 0px #FFFFFF;
-}
-
 /* ─── Scrollbar ─── */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--slate-100); border-left: 1px solid var(--bauhaus-dark); }
@@ -437,14 +401,30 @@ a.bg-brand-600:active,
 }
 
 @keyframes toastSlide {
-  from { opacity: 0; transform: translateX(20px); }
+  from { opacity: 0; transform: translateX(24px); }
   to   { opacity: 1; transform: translateX(0); }
 }
+@keyframes toastProgress {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
 .toast-item {
-  animation: toastSlide 140ms ease-out;
-  border: 2px solid var(--bauhaus-dark) !important;
-  border-radius: 0px !important;
-  box-shadow: var(--shadow-hard) !important;
+  animation: toastSlide 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  border: 2px solid var(--bauhaus-dark);
+  border-radius: 0px;
+  box-shadow: 4px 4px 0px 0px var(--bauhaus-dark);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+.dark .toast-item {
+  border-color: var(--night-border);
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.65);
+}
+.toast-exit {
+  opacity: 0 !important;
+  transform: translateX(24px) !important;
+}
+.toast-progress {
+  animation: toastProgress 3.8s linear forwards;
 }
 
 /* ─── Reduced Motion ─── */
@@ -523,13 +503,14 @@ a.bg-brand-600:active,
   box-shadow: 2px 2px 0px 0px var(--bauhaus-yellow);
 }
 .segment-pill button {
-  padding: 5px 14px;
+  padding: 5px 12px;
   border-radius: 0px;
-  font-size: 12px;
+  font-size: 11px;
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  white-space: nowrap;
   transition: all var(--transition);
   border: none;
   cursor: pointer;
@@ -787,4 +768,21 @@ input:focus, select:focus, textarea:focus {
 
 .pb-safe {
   padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* ─── Prevent Mobile Auto Zoom-In on Inputs & Eliminate Tap Zoom Delay ─── */
+button, a, input, select, textarea {
+  touch-action: manipulation;
+}
+
+@media (max-width: 1023px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="email"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }

@@ -25,17 +25,34 @@ async function runTests() {
     const meData = await meRes.json();
     console.log('Auth verification (/auth/me):', meData.authenticated ? '✅ Authenticated' : '❌ Not Authenticated');
 
-    // TEST F-02 & F-03: Chat transaction & auto-categorization
-    console.log('\n--- [TEST F-02 & F-03] Chat Transaction & Auto Category ---');
+    // TEST F-02 & F-03: Seed income first (required by balance guard), then test expense & auto-category
+    console.log('\n--- [TEST F-02 & F-03] Balance Guard, Chat Transaction & Auto Category ---');
+    const incRes = await fetch(`${BASE_URL}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ message: 'dapat uang saku 500rb cash', source: 'chat' })
+    });
+    const incData = await incRes.json();
+    console.log('Income Seed ("dapat uang saku 500rb cash"):', incData.success ? '✅ SUCCESS' : '❌ FAILED', '| Wallet:', incData.transaction?.wallet_label);
+
     const chatRes1 = await fetch(`${BASE_URL}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Cookie: cookie },
-      body: JSON.stringify({ message: 'makan siang 15rb', source: 'chat' })
+      body: JSON.stringify({ message: 'makan siang 15rb cash', source: 'chat' })
     });
     const chatData1 = await chatRes1.json();
-    console.log('Chat 1 ("makan siang 15rb"):', chatData1.success ? '✅ SUCCESS' : '❌ FAILED');
-    console.log('  -> Category:', chatData1.transaction?.category_name, '| Amount:', chatData1.transaction?.amount);
+    console.log('Chat 1 ("makan siang 15rb cash"):', chatData1.success ? '✅ SUCCESS' : '❌ FAILED');
+    console.log('  -> Category:', chatData1.transaction?.category_name, '| Amount:', chatData1.transaction?.amount, '| Wallet:', chatData1.transaction?.wallet_label);
     createdTxId = chatData1.transaction?.id;
+
+    // Test over-balance guard
+    const overRes = await fetch(`${BASE_URL}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ message: 'beli laptop 10 juta cash', source: 'chat' })
+    });
+    const overData = await overRes.json();
+    console.log('Balance Guard (10jt > saldo):', overData.is_insufficient_balance ? '✅ Correctly Blocked' : '❌ Failed to Block');
 
     // TEST F-02 with Voice input
     console.log('\n--- [TEST F-02] Voice Input ---');

@@ -50,7 +50,7 @@ async function loadDashboardData() {
     if (summaryRes.success) {
       const data = summaryRes.data;
 
-      // Update Top Stat Cards (F-06)
+      // Update Top Stat Cards & Cash/Bank Breakdown
       const balanceEl = document.getElementById('statTotalBalance');
       balanceEl.textContent = formatRupiah(data.total_balance);
       if (data.total_balance < 0) {
@@ -59,27 +59,109 @@ async function loadDashboardData() {
         balanceEl.className = 'text-3xl sm:text-4xl font-extrabold text-ink dark:text-nighttext tabular-nums';
       }
 
+      const ws = data.wallet_summary || { cash: 0, bank: 0, banks: [] };
+      window.currentWalletBalances = {
+        total: data.total_balance || 0,
+        cash: ws.cash || 0,
+        bank: ws.bank || 0,
+        banks: ws.banks || []
+      };
+
+      const cashEl = document.getElementById('statCashBalance');
+      const bankEl = document.getElementById('statBankBalance');
+      const bankDetailsEl = document.getElementById('statBankDetails');
+      if (cashEl) cashEl.textContent = formatRupiah(ws.cash || 0);
+      if (bankEl) bankEl.textContent = formatRupiah(ws.bank || 0);
+      if (bankDetailsEl) {
+        const specificBanks = (ws.banks || []).filter(b => b.name && b.name !== 'Bank Lainnya');
+        if (specificBanks.length > 0) {
+          bankDetailsEl.classList.remove('hidden');
+          bankDetailsEl.innerHTML = specificBanks.map(b =>
+            `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-brand-50 dark:bg-brand-950/40 text-bauhaus-blue dark:text-bauhaus-yellow border border-bauhaus-blue/25 dark:border-bauhaus-yellow/30 font-bold tabular-nums">${escapeHtml(b.name)}: ${formatRupiah(b.balance)}</span>`
+          ).join('');
+        } else {
+          bankDetailsEl.classList.add('hidden');
+          bankDetailsEl.innerHTML = '';
+        }
+      }
+
       document.getElementById('statMonthlyIncome').textContent = formatRupiah(data.monthly_income);
       document.getElementById('statMonthlyExpense').textContent = formatRupiah(data.monthly_expense);
+      window.lastMonthlyExpense = data.monthly_expense || 0;
+      window.lastMonthlyIncome = data.monthly_income || 0;
 
-      // Quota Counter (F-09)
+      // Update Safe-to-Spend Daily Card
+      const sts = data.safe_to_spend || { daily_limit: 0, spent_today: 0, remaining_days: 1 };
+      const safeDailyEl = document.getElementById('statSafeDaily');
+      const remDaysEl = document.getElementById('statRemainingDays');
+      const spentTodayEl = document.getElementById('statSpentToday');
+      const safeBarEl = document.getElementById('safeDailyBar');
+      const safeStatusEl = document.getElementById('statSafeDailyStatus');
+
+      if (safeDailyEl) safeDailyEl.textContent = formatRupiah(sts.daily_limit);
+      if (remDaysEl) remDaysEl.textContent = `Sisa ${sts.remaining_days} hari`;
+      if (spentTodayEl) spentTodayEl.textContent = formatRupiah(sts.spent_today);
+
+      if (safeBarEl && safeStatusEl) {
+        if (sts.daily_limit <= 0) {
+          safeBarEl.style.width = '0%';
+          safeBarEl.className = 'bg-slate-400 h-full transition-all duration-300';
+          safeStatusEl.textContent = 'Saldo Kosong';
+          safeStatusEl.className = 'font-bold text-slate-500';
+        } else {
+          const pct = Math.min(100, Math.round((sts.spent_today / sts.daily_limit) * 100));
+          safeBarEl.style.width = `${pct}%`;
+          if (sts.spent_today > sts.daily_limit) {
+            safeBarEl.className = 'bg-bauhaus-red h-full transition-all duration-300';
+            safeStatusEl.textContent = 'Melebihi Batas Harian';
+            safeStatusEl.className = 'font-bold text-bauhaus-red dark:text-red-400';
+          } else if (pct >= 75) {
+            safeBarEl.className = 'bg-bauhaus-yellow h-full transition-all duration-300';
+            safeStatusEl.textContent = 'Mendekati Batas';
+            safeStatusEl.className = 'font-bold text-amber-600 dark:text-bauhaus-yellow';
+          } else {
+            safeBarEl.className = 'bg-emerald-600 h-full transition-all duration-300';
+            safeStatusEl.textContent = 'Aman';
+            safeStatusEl.className = 'font-bold text-emerald-600 dark:text-emerald-400';
+          }
+        }
+      }
+
+      // Update Monthly Budget Limit Card
+      updateMonthlyBudgetCard(data.monthly_expense || 0, data.monthly_income || 0);
+
+      // Quota Counter
       const quota = data.chat_quota;
       const quotaText = `${quota.remaining} / ${quota.limit}`;
       document.getElementById('statQuotaCount').textContent = quotaText;
 
-      // Update Sidebar Quota
+      // Update Sidebar & Dashboard Quota Bars
       const sidebarQuotaText = document.getElementById('sidebarQuotaText');
       const sidebarQuotaBar = document.getElementById('sidebarQuotaBar');
+      const dashboardQuotaBar = document.getElementById('dashboardQuotaBar');
+      const numericLimit = Number(quota.limit) || 50;
+      const usedPct = Math.max(0, Math.min(100, (quota.used / numericLimit) * 100));
+      const remPct = Math.max(0, Math.min(100, (quota.remaining / numericLimit) * 100));
+
       if (sidebarQuotaText) sidebarQuotaText.textContent = `${quota.used}/${quota.limit}`;
       if (sidebarQuotaBar) {
-        const pct = Math.max(0, Math.min(100, (quota.used / quota.limit) * 100));
-        sidebarQuotaBar.style.width = `${pct}%`;
-        if (pct >= 90) {
-          sidebarQuotaBar.className = 'bg-red-500 h-1.5 rounded-full transition-all duration-300';
-        } else if (pct >= 70) {
-          sidebarQuotaBar.className = 'bg-amber-500 h-1.5 rounded-full transition-all duration-300';
+        sidebarQuotaBar.style.width = `${usedPct}%`;
+        if (usedPct >= 90) {
+          sidebarQuotaBar.className = 'bg-bauhaus-red h-full transition-all duration-300';
+        } else if (usedPct >= 70) {
+          sidebarQuotaBar.className = 'bg-bauhaus-yellow h-full transition-all duration-300';
         } else {
-          sidebarQuotaBar.className = 'bg-brand-600 h-1.5 rounded-full transition-all duration-300';
+          sidebarQuotaBar.className = 'bg-bauhaus-blue h-full transition-all duration-300';
+        }
+      }
+      if (dashboardQuotaBar) {
+        dashboardQuotaBar.style.width = `${remPct}%`;
+        if (remPct <= 10) {
+          dashboardQuotaBar.className = 'bg-bauhaus-red h-full transition-all duration-300';
+        } else if (remPct <= 30) {
+          dashboardQuotaBar.className = 'bg-bauhaus-yellow h-full transition-all duration-300';
+        } else {
+          dashboardQuotaBar.className = 'bg-bauhaus-blue h-full transition-all duration-300';
         }
       }
 
@@ -99,6 +181,54 @@ async function loadDashboardData() {
   }
 }
 
+function updateMonthlyBudgetCard(monthlyExpense, monthlyIncome) {
+  const textEl = document.getElementById('statMonthlyBudgetText');
+  const barEl = document.getElementById('monthlyBudgetBar');
+  const subEl = document.getElementById('statBudgetSubtext');
+  const statusEl = document.getElementById('statBudgetStatus');
+  if (!textEl || !barEl || !statusEl) return;
+
+  const customBudget = typeof getSavedMonthlyBudget === 'function' ? getSavedMonthlyBudget() : 0;
+  const activeBudget = customBudget > 0 ? customBudget : monthlyIncome;
+
+  if (!activeBudget || activeBudget <= 0) {
+    textEl.textContent = `${formatRupiah(monthlyExpense)} / Belum diatur`;
+    barEl.style.width = '0%';
+    barEl.className = 'bg-bauhaus-blue h-full transition-all duration-300';
+    if (subEl) subEl.textContent = 'Klik "Atur Batas" untuk menetapkan target bulanan';
+    statusEl.textContent = '—';
+    statusEl.className = 'font-bold text-slate-500';
+    return;
+  }
+
+  const pctRaw = Math.round((monthlyExpense / activeBudget) * 100);
+  const pctBar = Math.min(100, pctRaw);
+  const remaining = activeBudget - monthlyExpense;
+
+  textEl.textContent = `${formatRupiah(monthlyExpense)} / ${formatRupiah(activeBudget)}`;
+  barEl.style.width = `${pctBar}%`;
+
+  if (subEl) {
+    subEl.textContent = customBudget > 0
+      ? (remaining >= 0 ? `Sisa anggaran: ${formatRupiah(remaining)}` : `Melebihi target ${formatRupiah(Math.abs(remaining))}`)
+      : `Acuan otomatis dari pemasukan bulan ini`;
+  }
+
+  if (pctRaw >= 100) {
+    barEl.className = 'bg-bauhaus-red h-full transition-all duration-300';
+    statusEl.textContent = `${pctRaw}% (Overbudget)`;
+    statusEl.className = 'font-bold text-bauhaus-red dark:text-red-400';
+  } else if (pctRaw >= 80) {
+    barEl.className = 'bg-bauhaus-yellow h-full transition-all duration-300';
+    statusEl.textContent = `${pctRaw}% (Waspada)`;
+    statusEl.className = 'font-bold text-amber-600 dark:text-bauhaus-yellow';
+  } else {
+    barEl.className = 'bg-bauhaus-blue h-full transition-all duration-300';
+    statusEl.textContent = `${pctRaw}% Terpakai`;
+    statusEl.className = 'font-bold text-bauhaus-blue dark:text-bauhaus-yellow';
+  }
+}
+
 function renderRecentTransactions(transactions) {
   const container = document.getElementById('recentTxList');
   if (!container) return;
@@ -114,35 +244,44 @@ function renderRecentTransactions(transactions) {
   }
 
   container.innerHTML = transactions.map(tx => {
+    const isTransfer = tx.category_type === 'transfer' || tx.is_transfer;
     const isIncome = tx.category_type === 'income';
-    const amountClass = isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400';
-    const prefix = isIncome ? '+' : '-';
-    const iconClass = isIncome
-      ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40'
-      : 'text-red-500 bg-red-50 dark:bg-red-950/40';
-    const catIcon = getCategoryIcon(tx.category_name, tx.category_type);
-    const sourceIcon = tx.source === 'voice'
-      ? '<span class="badge-sand text-[10px]"><i class="fa-solid fa-microphone text-[9px]"></i> Suara</span>'
-      : '<span class="badge-sand text-[10px]"><i class="fa-solid fa-comment text-[9px]"></i> Chat</span>';
+    const amountClass = isTransfer
+      ? 'text-bauhaus-blue dark:text-bauhaus-yellow'
+      : (isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400');
+    const prefix = isTransfer ? '↔ ' : (isIncome ? '+' : '-');
+    const iconClass = isTransfer
+      ? 'text-bauhaus-blue bg-brand-50 dark:bg-brand-950/40 dark:text-bauhaus-yellow'
+      : (isIncome
+        ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40'
+        : 'text-red-500 bg-red-50 dark:bg-red-950/40');
+    const catIcon = isTransfer
+      ? '<i class="fa-solid fa-arrow-right-arrow-left"></i>'
+      : getCategoryIcon(tx.category_name, tx.category_type);
+    const walletBadge = isTransfer
+      ? `<span class="badge-accent text-[10px]"><i class="fa-solid fa-arrow-right-arrow-left text-[9px]"></i> ${escapeHtml(tx.wallet_label || 'Pindah Dana')}</span>`
+      : (tx.wallet_type === 'bank'
+        ? `<span class="badge-dirt text-[10px]"><i class="fa-solid fa-building-columns text-[9px]"></i> ${escapeHtml(tx.wallet_label || 'Bank')}</span>`
+        : `<span class="badge-sand text-[10px]"><i class="fa-solid fa-money-bill-wave text-[9px]"></i> Cash</span>`);
 
     return `
-      <div class="py-3.5 flex items-center justify-between text-xs font-sans">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 border-2 border-bauhaus-dark shadow-[2px_2px_0px_#121212] ${iconClass} flex items-center justify-center shrink-0 text-sm">
+      <div class="py-3.5 flex items-center justify-between gap-2 text-xs font-sans">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-9 h-9 rounded-full ${iconClass} flex items-center justify-center shrink-0 text-sm">
             ${catIcon}
           </div>
-          <div>
-            <p class="font-bold text-ink dark:text-nighttext">${escapeHtml(tx.description)}</p>
-            <div class="flex items-center gap-1.5 text-[11px] text-ink/50 dark:text-nighttext/50 mt-0.5">
+          <div class="min-w-0">
+            <p class="font-bold text-ink dark:text-nighttext truncate">${escapeHtml(tx.description)}</p>
+            <div class="flex flex-wrap items-center gap-1.5 text-[11px] text-ink/50 dark:text-nighttext/50 mt-0.5">
               <span>${escapeHtml(tx.category_name)}</span>
               <span>·</span>
               <span>${tx.occurred_on}</span>
               <span>·</span>
-              ${sourceIcon}
+              ${walletBadge}
             </div>
           </div>
         </div>
-        <div class="text-right">
+        <div class="text-right shrink-0">
           <p class="font-extrabold ${amountClass} tabular-nums text-sm">${prefix}${formatRupiah(tx.amount)}</p>
         </div>
       </div>
