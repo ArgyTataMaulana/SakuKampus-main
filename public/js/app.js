@@ -11,10 +11,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   initCurrencyInputs();
   syncMaxDateInputs();
 
-  // Deep-link routing support
+  // Deep-link routing support (5-menu architecture)
   const path = window.location.pathname.replace(/\/+$/, '').toLowerCase();
   const routeMap = {
     '/chat': 'chat',
+    '/wallets': 'wallets',
+    '/dompet': 'wallets',
+    '/analytics': 'analytics',
+    '/analisis': 'analytics',
     '/history': 'history',
     '/transactions': 'history',
     '/dashboard': 'dashboard'
@@ -113,7 +117,7 @@ function initCurrencyInputs() {
   });
 }
 
-// Proper Production Toast Notification System
+// Minimalist Apple-Style Toast Notification System
 function showToast(message, type = 'success', customTitle = null) {
   const container = document.getElementById('toastContainer');
   if (!container) return;
@@ -121,31 +125,27 @@ function showToast(message, type = 'success', customTitle = null) {
   const configMap = {
     success: {
       title: customTitle || 'Berhasil',
-      accent: 'border-l-emerald-600',
       iconBg: 'bg-emerald-600 text-white',
       icon: 'fa-check',
       barColor: 'bg-emerald-600'
     },
     error: {
       title: customTitle || 'Gagal',
-      accent: 'border-l-bauhaus-red',
-      iconBg: 'bg-bauhaus-red text-white',
+      iconBg: 'bg-red-600 text-white',
       icon: 'fa-xmark',
-      barColor: 'bg-bauhaus-red'
+      barColor: 'bg-red-600'
     },
     warning: {
       title: customTitle || 'Perhatian',
-      accent: 'border-l-bauhaus-yellow',
-      iconBg: 'bg-bauhaus-yellow text-bauhaus-dark',
+      iconBg: 'bg-amber-500 text-white',
       icon: 'fa-exclamation',
-      barColor: 'bg-bauhaus-yellow'
+      barColor: 'bg-amber-500'
     },
     info: {
       title: customTitle || 'Informasi',
-      accent: 'border-l-bauhaus-blue',
-      iconBg: 'bg-bauhaus-blue text-white',
+      iconBg: 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900',
       icon: 'fa-info',
-      barColor: 'bg-bauhaus-blue'
+      barColor: 'bg-zinc-900 dark:bg-zinc-100'
     }
   };
   const cfg = configMap[type] || configMap.info;
@@ -154,22 +154,22 @@ function showToast(message, type = 'success', customTitle = null) {
   const div = document.createElement('div');
   div.id = id;
   div.setAttribute('role', 'alert');
-  div.className = `toast-item pointer-events-auto relative overflow-hidden bg-white dark:bg-nightbg-card text-slate-900 dark:text-nighttext border-l-[6px] ${cfg.accent}`;
+  div.className = 'toast-item pointer-events-auto relative overflow-hidden bg-white/95 dark:bg-[#16161A]/95 backdrop-blur-md text-zinc-900 dark:text-zinc-100';
 
   div.innerHTML = `
     <div class="p-3.5 pr-3 flex items-start gap-3">
-      <div class="w-7 h-7 ${cfg.iconBg} flex items-center justify-center shrink-0 mt-0.5 text-xs font-black">
+      <div class="w-7 h-7 rounded-xl ${cfg.iconBg} flex items-center justify-center shrink-0 mt-0.5 text-xs">
         <i class="fa-solid ${cfg.icon}" aria-hidden="true"></i>
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100 leading-tight">${escapeHtml(cfg.title)}</p>
-        <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5 leading-snug font-medium">${escapeHtml(message)}</p>
+        <p class="text-xs font-semibold text-zinc-950 dark:text-zinc-50 leading-tight">${escapeHtml(cfg.title)}</p>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">${escapeHtml(message)}</p>
       </div>
-      <button type="button" onclick="dismissToast('${id}')" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white shrink-0 transition" aria-label="Tutup notifikasi">
+      <button type="button" onclick="dismissToast('${id}')" class="w-6 h-6 rounded-lg flex items-center justify-center text-zinc-400 hover:text-zinc-900 dark:hover:text-white shrink-0 transition" aria-label="Tutup notifikasi">
         <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
       </button>
     </div>
-    <div class="h-1 w-full bg-slate-100 dark:bg-slate-800">
+    <div class="h-[3px] w-full bg-zinc-100 dark:bg-zinc-800">
       <div class="toast-progress h-full ${cfg.barColor}"></div>
     </div>
   `;
@@ -185,11 +185,12 @@ function dismissToast(id) {
   setTimeout(() => el.remove(), 220);
 }
 
-// View Navigation Switcher
+// View Navigation Switcher (5-Menu Architecture — Catat as Main Core)
 function switchView(viewName) {
-  const views = ['dashboard', 'chat', 'history'];
+  const views = ['dashboard', 'wallets', 'chat', 'analytics', 'history'];
   if (!views.includes(viewName)) viewName = 'dashboard';
   currentView = viewName;
+
   try {
     const targetPath = viewName === 'dashboard' ? '/' : `/${viewName}`;
     if (window.location.protocol.startsWith('http') && window.location.pathname !== targetPath) {
@@ -198,90 +199,88 @@ function switchView(viewName) {
   } catch {
     // Ignore history API errors in restricted contexts
   }
-  // Automatically close mobile sidebar drawer on navigation!
+
   closeMobileMenu();
 
-  // Hide floating assistant button when already in full chat view
+  // Desktop-only Floating Chat FAB: toggle dedicated class (NEVER removes mobile hiding!)
   const floatingChat = document.getElementById('floatingChatContainer');
   if (floatingChat) {
-    if (viewName === 'chat') {
-      floatingChat.classList.add('hidden');
-    } else {
-      floatingChat.classList.remove('hidden');
-    }
+    floatingChat.classList.toggle('is-hidden-on-chat', viewName === 'chat');
   }
 
   const titles = {
-    dashboard: { title: 'Dashboard Keuangan', sub: 'Ringkasan saldo & transaksi pintar' },
-    chat: { title: 'Catat Transaksi', sub: 'Chatbot pintar & rekognisi suara (id-ID)' },
-    history: { title: 'Riwayat Transaksi', sub: 'Pencarian & manajemen transaksi keuangan' }
+    dashboard: { title: 'Dashboard', sub: 'Ringkasan saldo & aktivitas keuangan' },
+    wallets:   { title: 'Dompet & Anggaran', sub: 'Cash, rekening bank, pindah dana & target tabungan' },
+    chat:      { title: 'Catat Transaksi', sub: 'Asisten AI pencatat keuangan via chat & suara' },
+    analytics: { title: 'Analisis & Laporan', sub: 'Grafik kategori, tren keuangan & ekspor laporan' },
+    history:   { title: 'Riwayat Transaksi', sub: 'Pencarian, filter & manajemen transaksi' }
   };
 
-  // Toggle view containers
   views.forEach(v => {
     const el = document.getElementById(`view-${v}`);
     const navBtn = document.getElementById(`nav-${v}`);
     const mobileNavBtn = document.getElementById(`mobile-nav-${v}`);
 
     if (el) {
-      if (v === viewName) {
-        el.classList.remove('hidden');
-      } else {
-        el.classList.add('hidden');
-      }
+      el.classList.toggle('hidden', v !== viewName);
     }
 
-    // Desktop nav styles (sharp Bauhaus geometry)
+    // Desktop sidebar styles
     if (navBtn) {
-      if (v === viewName) {
-        navBtn.className = 'nav-item w-full flex items-center gap-3 px-3.5 py-2.5 text-sm font-semibold transition bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400';
+      if (v === 'chat') {
+        navBtn.classList.toggle('nav-core-active', v === viewName);
       } else {
-        navBtn.className = 'nav-item w-full flex items-center gap-3 px-3.5 py-2.5 text-sm font-medium transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800';
+        navBtn.classList.toggle('nav-active', v === viewName);
       }
     }
 
-    // Mobile nav styles (Clean 3-column Bauhaus tabs, zero overlap)
+    // Mobile 5-tab dock styles (Center Catat stays elevated Emerald Main Core)
     if (mobileNavBtn) {
-      const borderClass = v !== 'history' ? ' border-r border-bauhaus-dark/20' : '';
-      if (v === viewName) {
-        mobileNavBtn.className = `flex flex-col items-center justify-center gap-1 py-2.5 min-h-[56px] bg-bauhaus-yellow text-bauhaus-dark font-extrabold${borderClass} transition`;
+      if (v === 'chat') {
+        const orb = document.getElementById('mobileNavChatOrb');
+        if (orb) {
+          orb.classList.toggle('scale-105', v === viewName);
+          orb.classList.toggle('bg-emerald-700', v === viewName);
+          orb.classList.toggle('bg-emerald-600', v !== viewName);
+        }
+      } else if (v === viewName) {
+        mobileNavBtn.className = 'flex flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] text-zinc-950 dark:text-white font-semibold transition';
       } else {
-        mobileNavBtn.className = `flex flex-col items-center justify-center gap-1 py-2.5 min-h-[56px] text-slate-600 dark:text-slate-400 font-bold${borderClass} transition`;
+        mobileNavBtn.className = 'flex flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] text-zinc-400 dark:text-zinc-500 font-medium transition';
       }
     }
   });
-
-  // Topbar Title & Back Button Visibility
-  const btnBack = document.getElementById('btnBackToDashboard');
-  if (btnBack) {
-    if (viewName === 'dashboard') {
-      btnBack.classList.add('hidden');
-      btnBack.classList.remove('inline-flex');
-    } else {
-      btnBack.classList.remove('hidden');
-      btnBack.classList.add('inline-flex');
-    }
-  }
 
   if (titles[viewName]) {
     document.getElementById('topbarTitle').textContent = titles[viewName].title;
     document.getElementById('topbarSubtitle').textContent = titles[viewName].sub;
   }
 
-  // Scroll to top
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  // Reload specific view data if needed
-  if (viewName === 'dashboard') {
+  if (viewName === 'dashboard' || viewName === 'wallets') {
     loadDashboardData();
+  } else if (viewName === 'analytics') {
+    // Re-render charts after container becomes visible so canvas dimensions are exact
+    requestAnimationFrame(() => loadChartsData());
   } else if (viewName === 'history') {
     loadTransactions();
   }
 }
 
+// Quick jump from Dashboard Bento tile directly into Main Core Catat
+function quickLaunchChat(promptText) {
+  switchView('chat');
+  const input = document.getElementById('chatInputText');
+  if (input && promptText) {
+    input.value = promptText;
+    setTimeout(() => input.focus(), 120);
+  }
+}
+
 // Global modal backdrop & escape key handling
 function initModalListeners() {
-  const modals = ['editModal', 'deleteModal', 'addModal', 'logoutModal', 'transferModal', 'budgetModal'];
+  const modals = ['editModal', 'deleteModal', 'addModal', 'logoutModal', 'transferModal', 'budgetModal', 'savingsModal'];
   modals.forEach(modalId => {
     const modalEl = document.getElementById(modalId);
     if (modalEl) {
@@ -293,6 +292,7 @@ function initModalListeners() {
           if (modalId === 'logoutModal') closeLogoutModal();
           if (modalId === 'transferModal') closeTransferModal();
           if (modalId === 'budgetModal') closeBudgetModal();
+          if (modalId === 'savingsModal') closeSavingsModal();
         }
       });
     }
@@ -306,6 +306,7 @@ function initModalListeners() {
       closeLogoutModal();
       closeTransferModal();
       closeBudgetModal();
+      closeSavingsModal();
       closeFloatingChat();
       closeMobileMenu();
     }
@@ -369,19 +370,19 @@ function updateAddBalanceHint() {
 
   if (currentAddType === 'expense') {
     if (wb.total <= 0) {
-      notice.className = 'p-3 border-2 border-bauhaus-dark border-l-[6px] border-l-bauhaus-red bg-red-50 dark:bg-red-950/30 text-red-800 dark:text-red-200 text-xs font-semibold';
+      notice.className = 'p-3 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-xs font-medium';
       notice.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i> Saldo Anda saat ini <b>Rp 0</b>. Catat <b>Pemasukan</b> terlebih dahulu sebelum mencatat pengeluaran.`;
       return;
     }
     const available = walletType === 'bank' ? wb.bank : wb.cash;
     const label = walletType === 'bank' ? 'Bank' : 'Cash';
     if (available <= 0) {
-      notice.className = 'p-3 border-2 border-bauhaus-dark border-l-[6px] border-l-bauhaus-yellow bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 text-xs font-semibold';
+      notice.className = 'p-3 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-200 text-xs font-medium';
       notice.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Saldo <b>${label}</b> Anda Rp 0 (Cash: ${formatRupiah(wb.cash)} · Bank: ${formatRupiah(wb.bank)}). Pilih sumber dana yang memiliki saldo.`;
       return;
     }
-    notice.className = 'p-2.5 border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 text-xs font-medium';
-    notice.innerHTML = `Saldo <b>${label}</b> tersedia: <b class="tabular-nums text-slate-900 dark:text-slate-100">${formatRupiah(available)}</b>`;
+    notice.className = 'p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 text-xs';
+    notice.innerHTML = `Saldo <b>${label}</b> tersedia: <b class="tabular-nums text-zinc-950 dark:text-zinc-50">${formatRupiah(available)}</b>`;
   } else {
     notice.className = 'hidden';
   }
@@ -393,11 +394,11 @@ function setAddType(type) {
   const btnInc = document.getElementById('btnAddTypeIncome');
 
   if (type === 'expense') {
-    if (btnExp) btnExp.className = 'flex-1 py-2 text-xs font-semibold active text-expense';
-    if (btnInc) btnInc.className = 'flex-1 py-2 text-xs font-medium text-slate-500 dark:text-slate-400';
+    if (btnExp) btnExp.className = 'flex-1 py-2 text-xs font-semibold active text-red-600 dark:text-red-400';
+    if (btnInc) btnInc.className = 'flex-1 py-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400';
   } else {
     if (btnInc) btnInc.className = 'flex-1 py-2 text-xs font-semibold active text-emerald-600 dark:text-emerald-400';
-    if (btnExp) btnExp.className = 'flex-1 py-2 text-xs font-medium text-slate-500 dark:text-slate-400';
+    if (btnExp) btnExp.className = 'flex-1 py-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400';
   }
 
   // Populate categories according to selected type
@@ -633,6 +634,67 @@ function clearMonthlyBudget() {
   showToast('Batas anggaran kustom telah direset.', 'info');
   if (typeof updateMonthlyBudgetCard === 'function') {
     updateMonthlyBudgetCard(window.lastMonthlyExpense || 0, window.lastMonthlyIncome || 0);
+  }
+}
+
+// SAVINGS GOAL MODAL (Stored per user in localStorage)
+function getSavingsStorageKey() {
+  const email = currentUser?.email || 'default';
+  return `sakukampus_savings_goal_${email}`;
+}
+
+function getSavedSavingsGoal() {
+  try {
+    const raw = localStorage.getItem(getSavingsStorageKey());
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.name && Number(parsed.target) > 0) return parsed;
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function openSavingsModal() {
+  const modal = document.getElementById('savingsModal');
+  const saved = getSavedSavingsGoal();
+  const nameInput = document.getElementById('savingsNameInput');
+  if (nameInput) nameInput.value = saved?.name || '';
+  setCurrencyInputValue('savingsTargetInput', saved?.target || '');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeSavingsModal() {
+  const modal = document.getElementById('savingsModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function handleSaveSavingsGoal(e) {
+  e.preventDefault();
+  const name = (document.getElementById('savingsNameInput')?.value || '').trim();
+  const target = parseRupiahInput(document.getElementById('savingsTargetInput')?.value);
+  if (!name) {
+    showToast('Masukkan nama target tabungan.', 'warning');
+    return;
+  }
+  if (!Number.isFinite(target) || target < 10000 || target > 100000000) {
+    showToast('Target tabungan harus antara Rp 10.000 dan Rp 100.000.000.', 'warning', 'Nominal Tidak Valid');
+    return;
+  }
+  localStorage.setItem(getSavingsStorageKey(), JSON.stringify({ name, target }));
+  closeSavingsModal();
+  showToast(`Target "${name}" (${formatRupiah(target)}) disimpan.`, 'success', 'Target Tabungan');
+  if (typeof updateSavingsGoalCard === 'function') {
+    updateSavingsGoalCard(window.currentWalletBalances?.total || 0);
+  }
+}
+
+function clearSavingsGoal() {
+  localStorage.removeItem(getSavingsStorageKey());
+  closeSavingsModal();
+  showToast('Target tabungan telah direset.', 'info');
+  if (typeof updateSavingsGoalCard === 'function') {
+    updateSavingsGoalCard(window.currentWalletBalances?.total || 0);
   }
 }
 
