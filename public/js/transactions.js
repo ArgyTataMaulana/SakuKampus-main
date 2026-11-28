@@ -77,56 +77,56 @@ function renderTransactionsTable(transactions) {
     const isTransfer = tx.category_type === 'transfer' || tx.is_transfer;
     const isIncome = tx.category_type === 'income';
     const amountColor = isTransfer
-      ? 'text-bauhaus-blue dark:text-bauhaus-yellow font-bold tabular-nums'
+      ? 'text-zinc-900 dark:text-zinc-100 font-semibold tabular-nums'
       : (isIncome
-        ? 'text-emerald-600 dark:text-emerald-400 font-bold tabular-nums'
-        : 'text-red-500 dark:text-red-400 font-bold tabular-nums');
+        ? 'text-emerald-600 dark:text-emerald-400 font-semibold tabular-nums'
+        : 'text-red-600 dark:text-red-400 font-semibold tabular-nums');
     const prefix = isTransfer ? '↔ ' : (isIncome ? '+' : '-');
 
     const sourceBadge = tx.source === 'voice'
-      ? '<span class="badge-sand"><i class="fa-solid fa-microphone text-[10px]"></i> Suara</span>'
-      : '<span class="badge-sand"><i class="fa-solid fa-comment text-[10px]"></i> Chat</span>';
+      ? '<span class="badge-neutral"><i class="fa-solid fa-microphone text-[10px]"></i> Suara</span>'
+      : '<span class="badge-neutral"><i class="fa-solid fa-comment text-[10px]"></i> Chat</span>';
 
     const walletBadge = isTransfer
-      ? `<span class="badge-accent"><i class="fa-solid fa-arrow-right-arrow-left text-[10px]"></i> ${escapeHtml(tx.wallet_label || 'Pindah Dana')}</span>`
+      ? `<span class="badge-emerald"><i class="fa-solid fa-arrow-right-arrow-left text-[10px]"></i> ${escapeHtml(tx.wallet_label || 'Pindah Dana')}</span>`
       : (tx.wallet_type === 'bank'
-        ? `<span class="badge-dirt"><i class="fa-solid fa-building-columns text-[10px]"></i> ${escapeHtml(tx.wallet_label || 'Bank')}</span>`
-        : '<span class="badge-sand"><i class="fa-solid fa-money-bill-wave text-[10px]"></i> Cash</span>');
+        ? `<span class="badge-mono"><i class="fa-solid fa-building-columns text-[10px]"></i> ${escapeHtml(tx.wallet_label || 'Bank')}</span>`
+        : '<span class="badge-neutral"><i class="fa-solid fa-money-bill-wave text-[10px]"></i> Cash</span>');
 
     const categoryBadge = isTransfer
-      ? `<span class="badge-accent font-medium">Pindah Dana</span>`
+      ? `<span class="badge-emerald">Pindah Dana</span>`
       : (isIncome
-        ? `<span class="badge-sand text-emerald-600 dark:text-emerald-400 font-medium">${escapeHtml(tx.category_name)}</span>`
-        : `<span class="badge-sand font-medium">${escapeHtml(tx.category_name)}</span>`);
+        ? `<span class="badge-emerald">${escapeHtml(tx.category_name)}</span>`
+        : `<span class="badge-neutral">${escapeHtml(tx.category_name)}</span>`);
 
     const editBtnHtml = isTransfer
       ? ''
-      : `<button onclick="openEditModal(${tx.id})" class="p-2 text-slate-500 hover:text-bauhaus-blue hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Ubah Transaksi" aria-label="Ubah transaksi">
-              <i class="fa-solid fa-pen-to-square"></i>
+      : `<button onclick="openEditModal(${tx.id})" class="w-8 h-8 rounded-lg text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 inline-flex items-center justify-center transition" title="Ubah Transaksi" aria-label="Ubah transaksi">
+              <i class="fa-solid fa-pen-to-square text-xs"></i>
             </button>`;
 
     return `
-      <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-        <td class="py-4 px-6 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">${tx.occurred_on}</td>
-        <td class="py-4 px-6">
-          <p class="font-semibold text-slate-900 dark:text-slate-100">${escapeHtml(tx.description)}</p>
-          ${tx.raw_text ? `<p class="text-[11px] text-slate-400 dark:text-slate-500 italic mt-0.5">"${escapeHtml(tx.raw_text)}"</p>` : ''}
+      <tr class="transition">
+        <td class="py-3.5 px-5 text-xs text-zinc-500 dark:text-zinc-400 whitespace-nowrap tabular-nums">${tx.occurred_on}</td>
+        <td class="py-3.5 px-5">
+          <p class="font-semibold text-zinc-950 dark:text-zinc-50 text-sm">${escapeHtml(tx.description)}</p>
+          ${tx.raw_text ? `<p class="text-[11px] text-zinc-400 dark:text-zinc-500 italic mt-0.5">"${escapeHtml(tx.raw_text)}"</p>` : ''}
         </td>
-        <td class="py-4 px-6 whitespace-nowrap">
+        <td class="py-3.5 px-5 whitespace-nowrap">
           ${categoryBadge}
         </td>
-        <td class="py-4 px-6 text-center whitespace-nowrap space-x-1">
+        <td class="py-3.5 px-5 text-center whitespace-nowrap space-x-1">
           ${walletBadge}
           ${sourceBadge}
         </td>
-        <td class="py-4 px-6 text-right whitespace-nowrap ${amountColor}">
+        <td class="py-3.5 px-5 text-right whitespace-nowrap text-sm ${amountColor}">
           ${prefix}${formatRupiah(tx.amount)}
         </td>
-        <td class="py-4 px-6 text-center whitespace-nowrap">
+        <td class="py-3.5 px-5 text-center whitespace-nowrap">
           <div class="inline-flex items-center gap-1">
             ${editBtnHtml}
-            <button onclick="openDeleteModal(${tx.id})" class="p-2 text-slate-500 hover:text-bauhaus-red hover:bg-red-50 dark:hover:bg-red-950/40 transition" title="Hapus Transaksi" aria-label="Hapus transaksi">
-              <i class="fa-solid fa-trash-can"></i>
+            <button onclick="openDeleteModal(${tx.id})" class="w-8 h-8 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 inline-flex items-center justify-center transition" title="Hapus Transaksi" aria-label="Hapus transaksi">
+              <i class="fa-solid fa-trash-can text-xs"></i>
             </button>
           </div>
         </td>
@@ -207,7 +207,7 @@ function exportTransactionsPDF() {
     const isIncome = tx.category_type === 'income';
     const typeLabel = isTransfer ? 'Pindah Dana' : (isIncome ? 'Pemasukan' : 'Pengeluaran');
     const prefix = isTransfer ? '↔ ' : (isIncome ? '+' : '-');
-    const color = isTransfer ? '#1040C0' : (isIncome ? '#059669' : '#D02020');
+    const color = isTransfer ? '#18181B' : (isIncome ? '#059669' : '#DC2626');
     return `
       <tr>
         <td>${escapeHtml(tx.occurred_on)}</td>
@@ -232,28 +232,28 @@ function exportTransactionsPDF() {
       <meta charset="UTF-8">
       <title>Laporan Keuangan SakuKampus</title>
       <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; color: #121212; padding: 28px; margin: 0; }
-        .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #121212; padding-bottom: 14px; margin-bottom: 20px; }
-        .brand { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; text-transform: uppercase; }
-        .brand span { color: #1040C0; }
-        .meta { font-size: 12px; color: #555; text-align: right; }
+        body { font-family: 'Inter', -apple-system, 'Segoe UI', Arial, sans-serif; color: #09090B; padding: 28px; margin: 0; }
+        .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1.5px solid #E4E4E7; padding-bottom: 16px; margin-bottom: 20px; }
+        .brand { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+        .brand span { color: #059669; }
+        .meta { font-size: 12px; color: #52525B; text-align: right; }
         .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 22px; }
-        .box { border: 2px solid #121212; padding: 10px 12px; }
-        .box-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #555; }
-        .box-val { font-size: 15px; font-weight: 800; margin-top: 4px; }
+        .box { border: 1px solid #E4E4E7; border-radius: 12px; padding: 12px 14px; background: #FAFAFA; }
+        .box-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #71717A; }
+        .box-val { font-size: 15px; font-weight: 700; margin-top: 4px; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th { background: #121212; color: #fff; text-align: left; padding: 9px 10px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
-        td { border-bottom: 1px solid #ddd; padding: 8px 10px; }
-        tr:nth-child(even) td { background: #f8f7f3; }
-        .footer { margin-top: 24px; font-size: 11px; color: #666; text-align: center; }
+        th { background: #09090B; color: #fff; text-align: left; padding: 10px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; }
+        td { border-bottom: 1px solid #E4E4E7; padding: 9px 10px; }
+        tr:nth-child(even) td { background: #FAFAFA; }
+        .footer { margin-top: 24px; font-size: 11px; color: #71717A; text-align: center; }
         @media print { body { padding: 0; } }
       </style>
     </head>
     <body>
       <div class="header">
         <div>
-          <div class="brand">SAKU<span>KAMPUS</span></div>
-          <div style="font-size:12px;color:#555;margin-top:2px;">Laporan Riwayat Transaksi Keuangan</div>
+          <div class="brand">Saku<span>Kampus</span></div>
+          <div style="font-size:12px;color:#52525B;margin-top:2px;">Laporan Riwayat Transaksi Keuangan</div>
         </div>
         <div class="meta">
           <div><b>${escapeHtml(userName)}</b></div>
@@ -264,7 +264,7 @@ function exportTransactionsPDF() {
         <div class="box"><div class="box-label">Total Saldo</div><div class="box-val">${formatRupiah(wb.total)}</div></div>
         <div class="box"><div class="box-label">Cash / Bank</div><div class="box-val" style="font-size:12px;">Cash ${formatRupiah(wb.cash)}<br>Bank ${formatRupiah(wb.bank)}</div></div>
         <div class="box"><div class="box-label">Total Pemasukan</div><div class="box-val" style="color:#059669;">${formatRupiah(totalIncome)}</div></div>
-        <div class="box"><div class="box-label">Total Pengeluaran</div><div class="box-val" style="color:#D02020;">${formatRupiah(totalExpense)}</div></div>
+        <div class="box"><div class="box-label">Total Pengeluaran</div><div class="box-val" style="color:#DC2626;">${formatRupiah(totalExpense)}</div></div>
       </div>
       <table>
         <thead>

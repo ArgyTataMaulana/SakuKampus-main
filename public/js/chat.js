@@ -20,21 +20,20 @@ function toggleFloatingChat() {
     windowEl.classList.remove('hidden');
     if (iconEl) iconEl.className = 'fa-solid fa-xmark';
     if (toggleBtn) {
-      toggleBtn.title = 'Tutup SakuBot (X)';
-      toggleBtn.classList.add('bg-slate-700');
-      toggleBtn.classList.remove('bg-brand-600', 'hover:bg-brand-700');
+      toggleBtn.title = 'Tutup SakuBot';
+      toggleBtn.classList.add('bg-zinc-900');
+      toggleBtn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
     }
-    // Focus input
     setTimeout(() => {
       document.getElementById('floatingChatInputText')?.focus();
     }, 150);
   } else {
     windowEl.classList.add('hidden');
-    if (iconEl) iconEl.className = 'fa-solid fa-comments';
+    if (iconEl) iconEl.className = 'fa-solid fa-wand-magic-sparkles';
     if (toggleBtn) {
-      toggleBtn.title = 'Buka SakuBot Asisten';
-      toggleBtn.classList.remove('bg-slate-700');
-      toggleBtn.classList.add('bg-brand-600', 'hover:bg-brand-700');
+      toggleBtn.title = 'Buka SakuBot Cepat';
+      toggleBtn.classList.remove('bg-zinc-900');
+      toggleBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
     }
   }
 }
@@ -47,11 +46,11 @@ function closeFloatingChat() {
   if (windowEl && !windowEl.classList.contains('hidden')) {
     isFloatingChatOpen = false;
     windowEl.classList.add('hidden');
-    if (iconEl) iconEl.className = 'fa-solid fa-comments';
+    if (iconEl) iconEl.className = 'fa-solid fa-wand-magic-sparkles';
     if (toggleBtn) {
-      toggleBtn.title = 'Buka SakuBot Asisten';
-      toggleBtn.classList.remove('bg-slate-700');
-      toggleBtn.classList.add('bg-brand-600', 'hover:bg-brand-700');
+      toggleBtn.title = 'Buka SakuBot Cepat';
+      toggleBtn.classList.remove('bg-zinc-900');
+      toggleBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
     }
   }
 }
@@ -208,25 +207,25 @@ function appendFloatingBotSuccess(tx) {
   const isTransfer = tx.category_type === 'transfer' || tx.is_transfer;
   const isIncome = tx.category_type === 'income';
   const amountColor = isTransfer
-    ? 'text-bauhaus-blue dark:text-bauhaus-yellow'
-    : (isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400');
+    ? 'text-zinc-900 dark:text-zinc-100'
+    : (isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400');
   const prefix = isTransfer ? '↔ ' : (isIncome ? '+' : '-');
-  const editBtn = isTransfer ? '' : `<button onclick="openEditModal(${tx.id})" class="btn-block-outline !py-1 !px-2 text-[10px]">Ubah</button>`;
+  const editBtn = isTransfer ? '' : `<button onclick="openEditModal(${tx.id})" class="btn-outline !py-1 !px-2.5 text-[10px]">Ubah</button>`;
 
   div.innerHTML = `
     <div class="sakubot-avatar w-6 h-6 rounded-lg text-[10px] shrink-0 mt-0.5">
       <i class="fa-solid ${isTransfer ? 'fa-arrow-right-arrow-left' : 'fa-check'}"></i>
     </div>
-    <div class="max-w-[85%] bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl chat-bubble-bot text-xs leading-relaxed shadow-sm space-y-1.5 font-sans">
+    <div class="max-w-[85%] bg-white dark:bg-[#16161A] border border-zinc-200/80 dark:border-zinc-800 p-3 chat-bubble-bot text-xs leading-relaxed space-y-1.5">
       <div class="flex items-center justify-between gap-2">
-        <span class="font-bold text-slate-900 dark:text-slate-100">${escapeHtml(tx.category_name)}</span>
-        <span class="badge-sand text-[9px]">${escapeHtml(tx.wallet_label || 'Cash')}</span>
+        <span class="font-semibold text-zinc-950 dark:text-zinc-50">${escapeHtml(tx.category_name)}</span>
+        <span class="badge-neutral !text-[9px]">${escapeHtml(tx.wallet_label || 'Cash')}</span>
       </div>
-      <p class="text-sm font-extrabold ${amountColor} tabular-nums">${prefix}${formatRupiah(tx.amount)}</p>
-      <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">${escapeHtml(tx.description)} · ${tx.occurred_on}</p>
-      <div class="pt-1.5 flex gap-1.5 border-t border-slate-200 dark:border-slate-700">
+      <p class="text-sm font-bold ${amountColor} tabular-nums">${prefix}${formatRupiah(tx.amount)}</p>
+      <p class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">${escapeHtml(tx.description)} · ${tx.occurred_on}</p>
+      <div class="pt-1.5 flex gap-1.5 border-t border-zinc-100 dark:border-zinc-800">
         ${editBtn}
-        <button onclick="openDeleteModal(${tx.id})" class="btn-block-danger !py-1 !px-2 text-[10px]">
+        <button onclick="openDeleteModal(${tx.id})" class="btn-danger !py-1 !px-2.5 text-[10px]">
           Hapus
         </button>
       </div>
@@ -337,23 +336,11 @@ function updateQuotaUI(usage) {
   if (sidebarQuotaText) sidebarQuotaText.textContent = `${usage.used}/${usage.limit}`;
   if (sidebarQuotaBar) {
     sidebarQuotaBar.style.width = `${usedPct}%`;
-    if (usedPct >= 90) {
-      sidebarQuotaBar.className = 'bg-bauhaus-red h-full transition-all duration-300';
-    } else if (usedPct >= 70) {
-      sidebarQuotaBar.className = 'bg-bauhaus-yellow h-full transition-all duration-300';
-    } else {
-      sidebarQuotaBar.className = 'bg-bauhaus-blue h-full transition-all duration-300';
-    }
+    sidebarQuotaBar.className = usedPct >= 90 ? 'bg-red-600 h-full' : (usedPct >= 70 ? 'bg-amber-500 h-full' : 'bg-emerald-600 h-full');
   }
   if (dashboardQuotaBar) {
     dashboardQuotaBar.style.width = `${remPct}%`;
-    if (remPct <= 10) {
-      dashboardQuotaBar.className = 'bg-bauhaus-red h-full transition-all duration-300';
-    } else if (remPct <= 30) {
-      dashboardQuotaBar.className = 'bg-bauhaus-yellow h-full transition-all duration-300';
-    } else {
-      dashboardQuotaBar.className = 'bg-bauhaus-blue h-full transition-all duration-300';
-    }
+    dashboardQuotaBar.className = remPct <= 10 ? 'bg-red-600 h-full' : (remPct <= 30 ? 'bg-amber-500 h-full' : 'bg-emerald-600 h-full');
   }
 
   const statQuota = document.getElementById('statQuotaCount');
@@ -450,45 +437,42 @@ function appendBotTransactionSuccess(botReply, tx) {
   const isIncome = tx.category_type === 'income';
   const prefix = isTransfer ? '↔ ' : (isIncome ? '+' : '-');
   const amountColor = isTransfer
-    ? 'text-bauhaus-blue dark:text-bauhaus-yellow'
-    : (isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400');
+    ? 'text-zinc-900 dark:text-zinc-100'
+    : (isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400');
   const badgeClass = isTransfer
-    ? 'badge-accent font-bold'
-    : (isIncome ? 'badge-sand font-bold text-emerald-600 dark:text-emerald-400' : 'badge-sand font-medium');
+    ? 'badge-emerald'
+    : (isIncome ? 'badge-emerald' : 'badge-neutral');
   const typeLabel = isTransfer ? 'Pindah Dana' : `${isIncome ? 'Pemasukan' : 'Pengeluaran'} · ${escapeHtml(tx.category_name)}`;
   const editBtn = isTransfer
     ? ''
-    : `<button onclick="openEditModal(${tx.id})" class="btn-block-outline !py-1.5 !px-3 text-xs"><i class="fa-solid fa-pen-to-square text-brand-600" aria-hidden="true"></i> Ubah</button>`;
+    : `<button onclick="openEditModal(${tx.id})" class="btn-outline !py-1.5 !px-3 text-xs"><i class="fa-solid fa-pen-to-square text-zinc-500" aria-hidden="true"></i> Ubah</button>`;
 
   div.innerHTML = `
     <div class="sakubot-avatar w-8 h-8 rounded-xl text-xs shrink-0 mt-1">
       <i class="fa-solid ${isTransfer ? 'fa-arrow-right-arrow-left' : 'fa-check'}"></i>
     </div>
-    <div class="max-w-[85%] bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl chat-bubble-bot text-sm leading-relaxed shadow-sm space-y-3 font-sans">
+    <div class="max-w-[85%] bg-white dark:bg-[#16161A] border border-zinc-200/80 dark:border-zinc-800 p-4 chat-bubble-bot text-sm leading-relaxed space-y-3">
       <div>
-        <div class="flex flex-wrap items-center gap-1.5 mb-1">
-          <span class="${badgeClass} inline-block">
-            ${typeLabel}
-          </span>
-          <span class="badge-dirt inline-block">
+        <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+          <span class="${badgeClass}">${typeLabel}</span>
+          <span class="badge-mono">
             <i class="fa-solid ${isTransfer ? 'fa-arrow-right-arrow-left' : (tx.wallet_type === 'bank' ? 'fa-building-columns' : 'fa-money-bill-wave')} text-[9px]" aria-hidden="true"></i>
             ${escapeHtml(tx.wallet_label || 'Cash')}
           </span>
         </div>
-        <h4 class="font-bold text-slate-900 dark:text-slate-100 text-base">${escapeHtml(tx.description)}</h4>
-        <p class="text-xl font-extrabold ${amountColor} tabular-nums mt-1">${prefix}${formatRupiah(tx.amount)}</p>
-        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1.5">
+        <h4 class="font-semibold text-zinc-950 dark:text-zinc-50 text-base">${escapeHtml(tx.description)}</h4>
+        <p class="text-xl font-bold ${amountColor} tabular-nums mt-1">${prefix}${formatRupiah(tx.amount)}</p>
+        <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1 flex items-center gap-1.5">
           <i class="fa-regular fa-calendar" aria-hidden="true"></i>
-          <span>${tx.occurred_on}</span>
+          <span class="tabular-nums">${tx.occurred_on}</span>
           <span>·</span>
           <span>${isTransfer ? 'Tidak mengubah total pengeluaran' : (tx.parsed_by && (tx.parsed_by.startsWith('ai') || tx.parsed_by === 'llm') ? (tx.parsed_by.includes('groq') ? 'AI Groq' : (tx.parsed_by.includes('gemini') || tx.parsed_by === 'llm' ? 'AI Gemini' : 'AI')) : 'Aturan')}</span>
         </p>
       </div>
 
-      <!-- Quick Action Buttons right inside chat -->
-      <div class="pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center gap-2">
+      <div class="pt-2.5 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-2">
         ${editBtn}
-        <button onclick="openDeleteModal(${tx.id})" class="btn-block-danger !py-1.5 !px-3 text-xs">
+        <button onclick="openDeleteModal(${tx.id})" class="btn-danger !py-1.5 !px-3 text-xs">
           <i class="fa-solid fa-trash-can" aria-hidden="true"></i> Hapus
         </button>
       </div>
