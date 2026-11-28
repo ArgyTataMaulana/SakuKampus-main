@@ -7,6 +7,11 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function getLocalTodayDateStr() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
 const api = {
   async get(url) {
     const res = await fetch(url);
@@ -20,7 +25,10 @@ const api = {
   async post(url, body) {
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Client-Date': getLocalTodayDateStr()
+      },
       body: JSON.stringify(body)
     });
     if (res.status === 401) {
@@ -33,7 +41,10 @@ const api = {
   async put(url, body) {
     const res = await fetch(url, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Client-Date': getLocalTodayDateStr()
+      },
       body: JSON.stringify(body)
     });
     if (res.status === 401) {

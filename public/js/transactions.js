@@ -315,6 +315,7 @@ async function openEditModal(txId) {
       document.getElementById('editTxId').value = tx.id;
       setCurrencyInputValue('editAmount', tx.amount);
       document.getElementById('editDesc').value = tx.description;
+      if (typeof syncMaxDateInputs === 'function') syncMaxDateInputs();
       document.getElementById('editDate').value = tx.occurred_on;
 
       const editWallet = document.getElementById('editWalletType');
@@ -359,6 +360,10 @@ async function handleSaveEdit(e) {
 
   if (!Number.isFinite(amount) || amount < 100 || amount > 100000000) {
     showToast('Nominal transaksi harus antara Rp 100 dan Rp 100.000.000.', 'warning', 'Nominal Tidak Valid');
+    return;
+  }
+  if (occurred_on && typeof getLocalTodayDateStr === 'function' && occurred_on > getLocalTodayDateStr()) {
+    showToast('Tanggal transaksi tidak boleh melebihi hari ini.', 'warning', 'Tanggal Tidak Valid');
     return;
   }
 

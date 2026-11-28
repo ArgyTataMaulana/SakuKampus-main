@@ -97,6 +97,12 @@ async function handleSendFloatingChat(event) {
       return;
     }
 
+    if (res.is_future_date) {
+      appendFloatingBotMessage(res.bot_reply, 'warning');
+      showToast('Tanggal transaksi tidak boleh melebihi hari ini.', 'warning', 'Tanggal Tidak Valid');
+      return;
+    }
+
     if (res.is_consultation) {
       appendFloatingBotMessage(res.bot_reply, 'consultation');
       return;
@@ -281,6 +287,12 @@ async function handleSendChatWithSource(source = 'chat') {
     if (res.is_insufficient_balance) {
       appendBotMessage(res.bot_reply, 'warning');
       showToast('Saldo tidak mencukupi untuk mencatat pengeluaran ini.', 'warning', 'Saldo Kurang');
+      return;
+    }
+
+    if (res.is_future_date) {
+      appendBotMessage(res.bot_reply, 'warning');
+      showToast('Tanggal transaksi tidak boleh melebihi hari ini.', 'warning', 'Tanggal Tidak Valid');
       return;
     }
 

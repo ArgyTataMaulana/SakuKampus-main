@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
   initModalListeners();
   initCurrencyInputs();
+  syncMaxDateInputs();
 
   // Deep-link routing support
   const path = window.location.pathname.replace(/\/+$/, '').toLowerCase();
@@ -311,15 +312,25 @@ function initModalListeners() {
   });
 }
 
+// Lock future dates on all transaction & history date pickers (max = local today)
+function syncMaxDateInputs() {
+  const today = getLocalTodayDateStr();
+  const dateIds = ['addDate', 'editDate', 'transferDate', 'filterStartDate', 'filterEndDate'];
+  dateIds.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.max = today;
+  });
+}
+
 // MANUAL ADD TRANSACTION MODAL
 function openAddModal() {
   const addModal = document.getElementById('addModal');
   const dateInput = document.getElementById('addDate');
   const walletSelect = document.getElementById('addWalletType');
   const bankSelect = document.getElementById('addBankName');
+  syncMaxDateInputs();
   if (dateInput) {
-    const now = new Date();
-    dateInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    dateInput.value = getLocalTodayDateStr();
   }
   if (walletSelect) walletSelect.value = 'cash';
   if (bankSelect) bankSelect.value = '';
@@ -414,6 +425,10 @@ async function handleSaveAdd(e) {
     showToast('Nominal transaksi harus antara Rp 100 dan Rp 100.000.000.', 'warning', 'Nominal Tidak Valid');
     return;
   }
+  if (occurred_on && occurred_on > getLocalTodayDateStr()) {
+    showToast('Tanggal transaksi tidak boleh melebihi hari ini.', 'warning', 'Tanggal Tidak Valid');
+    return;
+  }
 
   if (submitBtn) {
     submitBtn.disabled = true;
@@ -453,9 +468,9 @@ async function handleSaveAdd(e) {
 function openTransferModal() {
   const modal = document.getElementById('transferModal');
   const dateInput = document.getElementById('transferDate');
+  syncMaxDateInputs();
   if (dateInput) {
-    const now = new Date();
-    dateInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    dateInput.value = getLocalTodayDateStr();
   }
   const wb = window.currentWalletBalances || { cash: 0, bank: 0 };
   const fromEl = document.getElementById('transferFromWallet');
@@ -523,6 +538,10 @@ async function handleSaveTransfer(e) {
 
   if (!Number.isFinite(amount) || amount < 100 || amount > 100000000) {
     showToast('Nominal pindah dana harus antara Rp 100 dan Rp 100.000.000.', 'warning', 'Nominal Tidak Valid');
+    return;
+  }
+  if (occurred_on && occurred_on > getLocalTodayDateStr()) {
+    showToast('Tanggal pindah dana tidak boleh melebihi hari ini.', 'warning', 'Tanggal Tidak Valid');
     return;
   }
 
