@@ -3,106 +3,105 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Masuk - SakuKampus</title>
+  <title>Masuk — SakuKampus</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="/js/tailwind-config.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-<body class="login-bg min-h-screen text-ink dark:text-nighttext flex flex-col justify-between transition-colors duration-200">
+<body class="login-bg min-h-screen text-zinc-950 dark:text-zinc-50 flex flex-col justify-between transition-colors duration-200">
 
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed top-5 right-4 sm:right-6 z-[60] flex flex-col gap-2.5 pointer-events-none max-w-sm w-full" aria-live="polite"></div>
 
-  <!-- Top bar with theme toggle -->
-  <header class="w-full px-6 py-4 flex justify-between items-center max-w-6xl mx-auto relative z-10">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 bg-bauhaus-blue text-white flex items-center justify-center border-2 border-bauhaus-dark shadow-[3px_3px_0px_0px_#121212] shrink-0">
-        <i class="fa-solid fa-wallet text-base" aria-hidden="true"></i>
+  <!-- Minimalist Top Header -->
+  <header class="w-full px-6 py-5 flex justify-between items-center max-w-5xl mx-auto relative z-10">
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-xl bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 flex items-center justify-center shrink-0">
+        <i class="fa-solid fa-wallet text-sm" aria-hidden="true"></i>
       </div>
-      <div>
-        <span class="font-extrabold text-xl tracking-tighter text-ink dark:text-nighttext uppercase">Saku<span class="text-bauhaus-blue dark:text-bauhaus-yellow">Kampus</span></span>
-      </div>
+      <span class="font-bold text-lg tracking-tight text-zinc-950 dark:text-zinc-50">
+        Saku<span class="text-emerald-600 dark:text-emerald-400">Kampus</span>
+      </span>
     </div>
-    <button id="themeToggleBtn" class="p-2.5 border-2 border-bauhaus-dark dark:border-night-border bg-white dark:bg-nightbg-card hover:bg-bauhaus-yellow dark:hover:bg-bauhaus-yellow hover:text-bauhaus-dark text-bauhaus-dark dark:text-nighttext shadow-[2px_2px_0px_0px_#121212] dark:shadow-[2px_2px_0px_0px_#F0C020] active:translate-x-[1px] active:translate-y-[1px] transition" title="Toggle Tema" aria-label="Toggle tema gelap/terang">
-      <i class="fa-solid fa-moon dark:hidden" aria-hidden="true"></i>
-      <i class="fa-solid fa-sun hidden dark:inline" aria-hidden="true"></i>
+    <button id="themeToggleBtn" class="w-9 h-9 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center transition" title="Ubah Tema" aria-label="Toggle tema gelap/terang">
+      <i class="fa-solid fa-moon text-sm dark:hidden" aria-hidden="true"></i>
+      <i class="fa-solid fa-sun text-sm hidden dark:inline text-amber-400" aria-hidden="true"></i>
     </button>
   </header>
 
-  <!-- Main Login Card -->
+  <!-- Main Login Bento Card -->
   <main class="flex-1 flex items-center justify-center px-4 py-8 relative z-10">
-    <div class="w-full max-w-md">
+    <div class="w-full max-w-md space-y-4">
       <!-- Error notification banner -->
-      <div id="errorAlert" class="hidden mb-4 p-4 border-2 border-bauhaus-dark border-l-[6px] text-sm flex items-start gap-3 shadow-[4px_4px_0px_#121212]">
-        <i class="fa-solid fa-triangle-exclamation text-lg mt-0.5" aria-hidden="true"></i>
+      <div id="errorAlert" class="hidden p-4 rounded-2xl border text-sm flex items-start gap-3">
+        <i class="fa-solid fa-triangle-exclamation text-base mt-0.5" aria-hidden="true"></i>
         <div class="flex-1">
-          <p id="errorTitle" class="font-bold uppercase tracking-tight text-xs"></p>
+          <p id="errorTitle" class="font-semibold text-xs"></p>
           <p id="errorDesc" class="text-xs mt-0.5 opacity-90"></p>
         </div>
       </div>
 
-      <div class="craft-card bg-white dark:bg-nightbg-card p-8 shadow-[5px_5px_0px_0px_#121212] dark:shadow-[5px_5px_0px_0px_#F0C020] relative">
-        <!-- Logo & Title -->
-        <div class="text-center mb-8">
-          <div class="w-16 h-16 bg-bauhaus-blue text-white flex items-center justify-center mx-auto mb-4 border-2 border-bauhaus-dark text-3xl">
+      <div class="bento-card p-7 sm:p-8 space-y-7">
+        <!-- Brand Hero -->
+        <div class="text-center">
+          <div class="w-14 h-14 rounded-2xl bg-emerald-600 text-white shadow-emerald flex items-center justify-center mx-auto mb-4 text-2xl">
             <i class="fa-solid fa-wallet" aria-hidden="true"></i>
           </div>
-          <span class="label-upper block mb-1 text-bauhaus-blue dark:text-bauhaus-yellow font-extrabold">Catat Keuangan Mahasiswa</span>
-          <h1 class="text-3xl font-black tracking-tight text-ink dark:text-nighttext uppercase">Masuk ke SakuKampus</h1>
-          <p class="text-xs text-slate-600 dark:text-slate-400 mt-2 font-medium">
-            Catat transaksi semudah chatting. Asisten cerdas keuangan mahasiswa.
+          <span class="label-upper text-emerald-600 dark:text-emerald-400 block mb-1.5">Personal Finance Assistant</span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-950 dark:text-zinc-50">Masuk ke SakuKampus</h1>
+          <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-2 leading-relaxed">
+            Catat transaksi semudah chatting dengan asisten keuangan mahasiswa.
           </p>
         </div>
 
-        <!-- Google OAuth 2.0 Button -->
-        <div class="space-y-3.5">
-          <a href="/auth/google" class="w-full flex items-center justify-center gap-3 px-5 py-3.5 border-2 border-bauhaus-dark dark:border-night-border bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide text-xs shadow-[3px_3px_0px_0px_#121212] dark:shadow-[3px_3px_0px_0px_#F0C020] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition">
+        <!-- Auth Actions -->
+        <div class="space-y-3">
+          <a href="/auth/google" class="btn-outline w-full !py-3 !px-4 text-xs sm:text-sm font-semibold">
             <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
               <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
               <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
               <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
               <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
             </svg>
-            Masuk dengan Akun Google
+            <span>Masuk dengan Akun Google</span>
           </a>
 
-          <div class="relative flex items-center justify-center my-4">
-            <div class="border-t-2 border-bauhaus-dark/20 dark:border-night-border/30 w-full"></div>
-            <span class="bg-white dark:bg-nightbg-card px-3 text-[10px] font-black uppercase tracking-widest text-slate-500 absolute">ATAU</span>
+          <div class="relative flex items-center justify-center py-1">
+            <div class="border-t border-zinc-200 dark:border-zinc-800 w-full"></div>
+            <span class="bg-white dark:bg-[#121215] px-3 text-[11px] font-medium text-zinc-400 absolute">atau</span>
           </div>
 
-          <!-- Demo Quick Login Button -->
-          <button id="btnDemoLogin" class="btn-block-primary w-full flex items-center justify-center gap-2 px-5 py-3.5 bg-bauhaus-blue hover:bg-bauhaus-blue-dark text-white font-extrabold text-xs uppercase tracking-wider shadow-[4px_4px_0px_0px_#121212] transition">
-            <i class="fa-solid fa-play text-xs" aria-hidden="true"></i>
-            Masuk Mode Demo (1-Klik)
-            <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
+          <button id="btnDemoLogin" class="btn-emerald w-full !py-3 text-xs sm:text-sm">
+            <i class="fa-solid fa-play text-[11px]" aria-hidden="true"></i>
+            <span>Masuk Mode Demo (1-Klik)</span>
+            <i class="fa-solid fa-arrow-right text-[11px]" aria-hidden="true"></i>
           </button>
-          <p class="text-center text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-            *Mode demo menggunakan akun mahasiswa uji coba untuk eksplorasi langsung.
+          <p class="text-center text-[11px] text-zinc-400 dark:text-zinc-500">
+            Mode demo menggunakan akun uji coba untuk eksplorasi langsung.
           </p>
         </div>
 
-        <!-- Features summary -->
-        <div class="mt-8 pt-6 border-t-2 border-bauhaus-dark/15 dark:border-night-border/20 grid grid-cols-2 gap-3 text-xs font-semibold text-slate-700 dark:text-slate-300">
-          <div class="flex items-center gap-2">
-            <span class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] shrink-0 font-bold">✓</span>
-            <span>Catat Chat & Suara</span>
+        <!-- Bento Mini Highlights -->
+        <div class="pt-5 border-t border-zinc-100 dark:border-zinc-800/80 grid grid-cols-2 gap-2.5 text-xs text-zinc-600 dark:text-zinc-300">
+          <div class="bento-tile px-3 py-2 flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-emerald-600 dark:text-emerald-400 text-[11px]" aria-hidden="true"></i>
+            <span class="font-medium">Catat Chat & Suara</span>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] shrink-0 font-bold">✓</span>
-            <span>Kategori Otomatis</span>
+          <div class="bento-tile px-3 py-2 flex items-center gap-2">
+            <i class="fa-solid fa-wallet text-emerald-600 dark:text-emerald-400 text-[11px]" aria-hidden="true"></i>
+            <span class="font-medium">Dompet Cash & Bank</span>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] shrink-0 font-bold">✓</span>
-            <span>Grafik Keuangan</span>
+          <div class="bento-tile px-3 py-2 flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-emerald-600 dark:text-emerald-400 text-[11px]" aria-hidden="true"></i>
+            <span class="font-medium">Analisis & Laporan</span>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] shrink-0 font-bold">✓</span>
-            <span>Privasi Data Aman</span>
+          <div class="bento-tile px-3 py-2 flex items-center gap-2">
+            <i class="fa-solid fa-shield-halved text-emerald-600 dark:text-emerald-400 text-[11px]" aria-hidden="true"></i>
+            <span class="font-medium">Privasi Data Aman</span>
           </div>
         </div>
       </div>
@@ -110,9 +109,9 @@
   </main>
 
   <!-- Modal Google Account Chooser -->
-  <div id="googleModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs fade-in">
-    <div class="w-full max-w-sm bg-white dark:bg-nightbg-card border-2 border-bauhaus-dark dark:border-night-border shadow-[6px_6px_0px_0px_#121212] dark:shadow-[6px_6px_0px_0px_#F0C020] p-6 space-y-4 animate-popup">
-      <div class="flex items-center justify-between pb-3 border-b-2 border-bauhaus-dark dark:border-night-border">
+  <div id="googleModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-xs fade-in">
+    <div class="w-full max-w-sm bg-white dark:bg-[#121215] border border-zinc-200/80 dark:border-zinc-800 rounded-[24px] shadow-2xl p-6 space-y-4 animate-popup">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
         <div class="flex items-center gap-2.5">
           <svg class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
@@ -120,75 +119,71 @@
             <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
             <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
           </svg>
-          <span class="font-black text-sm uppercase tracking-tight text-slate-900 dark:text-slate-100">Login Akun Google</span>
+          <span class="font-bold text-sm text-zinc-950 dark:text-zinc-50">Pilih Akun Google</span>
         </div>
-        <button type="button" onclick="closeGoogleModal()" class="w-8 h-8 border-2 border-bauhaus-dark flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-bauhaus-yellow hover:text-bauhaus-dark shadow-[1px_1px_0px_#121212] transition" aria-label="Tutup">
-          <i class="fa-solid fa-xmark text-base" aria-hidden="true"></i>
+        <button type="button" onclick="closeGoogleModal()" class="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-950 dark:hover:text-white flex items-center justify-center transition" aria-label="Tutup">
+          <i class="fa-solid fa-xmark text-sm" aria-hidden="true"></i>
         </button>
       </div>
 
-      <div class="text-xs text-slate-600 dark:text-slate-300">
-        Pilih akun Google Anda untuk melanjutkan ke <b>SakuKampus</b>:
-      </div>
+      <p class="text-xs text-zinc-500 dark:text-zinc-400">
+        Pilih akun untuk melanjutkan ke <b class="text-zinc-900 dark:text-zinc-100">SakuKampus</b>:
+      </p>
 
-      <!-- Account List -->
       <div class="space-y-2">
-        <button type="button" onclick="loginGoogleDirect('Dimas Pratama', 'dimas.pratama@student.umy.ac.id')" class="w-full flex items-center gap-3 p-3 hover:bg-bauhaus-yellow/20 dark:hover:bg-slate-800 border-2 border-bauhaus-dark/20 dark:border-slate-700 hover:border-bauhaus-dark transition text-left group">
-          <img src="https://api.dicebear.com/7.x/initials/svg?seed=Dimas" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 shrink-0 border border-bauhaus-dark" alt="Avatar">
+        <button type="button" onclick="loginGoogleDirect('Dimas Pratama', 'dimas.pratama@student.umy.ac.id')" class="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 transition text-left group">
+          <img src="https://api.dicebear.com/7.x/initials/svg?seed=Dimas" class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 shrink-0" alt="Avatar">
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-bauhaus-blue dark:group-hover:text-bauhaus-yellow truncate">Dimas Pratama</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 truncate">dimas.pratama@student.umy.ac.id</p>
+            <p class="text-sm font-semibold text-zinc-950 dark:text-zinc-50 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 truncate">Dimas Pratama</p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 truncate">dimas.pratama@student.umy.ac.id</p>
           </div>
-          <i class="fa-solid fa-chevron-right text-xs text-slate-400 group-hover:text-bauhaus-blue" aria-hidden="true"></i>
+          <i class="fa-solid fa-chevron-right text-xs text-zinc-400" aria-hidden="true"></i>
         </button>
 
-        <button type="button" onclick="loginGoogleDirect('Siti Rahmawati', 'siti.rahmawati@student.umy.ac.id')" class="w-full flex items-center gap-3 p-3 hover:bg-bauhaus-yellow/20 dark:hover:bg-slate-800 border-2 border-bauhaus-dark/20 dark:border-slate-700 hover:border-bauhaus-dark transition text-left group">
-          <img src="https://api.dicebear.com/7.x/initials/svg?seed=Siti" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 shrink-0 border border-bauhaus-dark" alt="Avatar">
+        <button type="button" onclick="loginGoogleDirect('Siti Rahmawati', 'siti.rahmawati@student.umy.ac.id')" class="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 transition text-left group">
+          <img src="https://api.dicebear.com/7.x/initials/svg?seed=Siti" class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 shrink-0" alt="Avatar">
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-bauhaus-blue dark:group-hover:text-bauhaus-yellow truncate">Siti Rahmawati</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 truncate">siti.rahmawati@student.umy.ac.id</p>
+            <p class="text-sm font-semibold text-zinc-950 dark:text-zinc-50 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 truncate">Siti Rahmawati</p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 truncate">siti.rahmawati@student.umy.ac.id</p>
           </div>
-          <i class="fa-solid fa-chevron-right text-xs text-slate-400 group-hover:text-bauhaus-blue" aria-hidden="true"></i>
+          <i class="fa-solid fa-chevron-right text-xs text-zinc-400" aria-hidden="true"></i>
         </button>
 
-        <!-- Option 3: Custom Account -->
         <div id="customAccountSection" class="pt-1">
-          <button type="button" id="btnShowCustomAccount" onclick="toggleCustomAccountInput()" class="w-full flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 border-2 border-dashed border-slate-400 dark:border-slate-600 transition text-left text-xs font-bold text-bauhaus-blue dark:text-bauhaus-yellow">
-            <div class="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-950/40 text-bauhaus-blue dark:text-bauhaus-yellow flex items-center justify-center shrink-0">
+          <button type="button" id="btnShowCustomAccount" onclick="toggleCustomAccountInput()" class="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-900 border border-dashed border-zinc-300 dark:border-zinc-700 transition text-left text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+            <div class="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
               <i class="fa-solid fa-user-plus text-sm" aria-hidden="true"></i>
             </div>
             <span>Gunakan Akun Google / Email Lain</span>
           </button>
 
-          <!-- Input form if custom -->
-          <form id="customAccountForm" onsubmit="handleCustomGoogleLogin(event)" class="hidden mt-2 p-3 bg-slate-50 dark:bg-slate-800 border-2 border-bauhaus-dark space-y-2.5 text-xs">
+          <form id="customAccountForm" onsubmit="handleCustomGoogleLogin(event)" class="hidden mt-2.5 p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-2.5 text-xs">
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Nama Lengkap</label>
-              <input type="text" id="customName" required placeholder="Contoh: Budi Santoso" class="w-full px-3 py-2 bg-white dark:bg-nightbg-card text-slate-900 dark:text-slate-100">
+              <label for="customName" class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Nama Lengkap</label>
+              <input type="text" id="customName" required placeholder="Contoh: Budi Santoso" class="w-full px-3 py-2 text-xs">
             </div>
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Alamat Email Google / Kampus</label>
-              <input type="email" id="customEmail" required placeholder="budi@student.umy.ac.id atau @gmail.com" class="w-full px-3 py-2 bg-white dark:bg-nightbg-card text-slate-900 dark:text-slate-100">
+              <label for="customEmail" class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Alamat Email</label>
+              <input type="email" id="customEmail" required placeholder="budi@student.umy.ac.id atau @gmail.com" class="w-full px-3 py-2 text-xs">
             </div>
-            <button type="submit" class="btn-block-primary w-full py-2.5 text-xs font-bold uppercase tracking-wider">
+            <button type="submit" class="btn-primary w-full py-2.5 text-xs">
               Masuk dengan Akun Ini
             </button>
           </form>
         </div>
       </div>
 
-      <p class="text-[11px] text-center text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-700">
-        <i class="fa-solid fa-lock text-emerald-600 dark:text-emerald-400 mr-1" aria-hidden="true"></i> Autentikasi aman SakuKampus. Sesi tersimpan dengan cookie HttpOnly.
+      <p class="text-[11px] text-center text-zinc-400 dark:text-zinc-500 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+        <i class="fa-solid fa-lock text-emerald-600 dark:text-emerald-400 mr-1" aria-hidden="true"></i> Autentikasi aman dengan cookie HttpOnly.
       </p>
     </div>
   </div>
 
-  <footer class="py-4 text-center text-xs text-slate-500 dark:text-slate-400 relative z-10 font-medium">
-    &copy; 2026 SakuKampus · Asisten Keuangan Cerdas Mahasiswa
+  <footer class="py-5 text-center text-xs text-zinc-400 dark:text-zinc-500 relative z-10">
+    &copy; 2026 SakuKampus · Asisten Keuangan Mahasiswa
   </footer>
 
   <script>
-    // Safe HTML escaper for toasts
     function escapeHtml(text) {
       if (!text) return '';
       const div = document.createElement('div');
@@ -196,68 +191,37 @@
       return div.innerHTML;
     }
 
-    // Proper Toast Notification System for Login Page
     function showLoginToast(message, type = 'error', customTitle = null) {
       const container = document.getElementById('toastContainer');
       if (!container) return;
 
       const config = {
-        success: {
-          title: customTitle || 'Berhasil',
-          accent: 'border-l-emerald-600',
-          iconBg: 'bg-emerald-600 text-white',
-          icon: 'fa-check',
-          barColor: 'bg-emerald-600'
-        },
-        error: {
-          title: customTitle || 'Gagal',
-          accent: 'border-l-bauhaus-red',
-          iconBg: 'bg-bauhaus-red text-white',
-          icon: 'fa-xmark',
-          barColor: 'bg-bauhaus-red'
-        },
-        warning: {
-          title: customTitle || 'Perhatian',
-          accent: 'border-l-bauhaus-yellow',
-          iconBg: 'bg-bauhaus-yellow text-bauhaus-dark',
-          icon: 'fa-exclamation',
-          barColor: 'bg-bauhaus-yellow'
-        },
-        info: {
-          title: customTitle || 'Informasi',
-          accent: 'border-l-bauhaus-blue',
-          iconBg: 'bg-bauhaus-blue text-white',
-          icon: 'fa-info',
-          barColor: 'bg-bauhaus-blue'
-        }
-      }[type] || {
-        title: customTitle || 'Informasi',
-        accent: 'border-l-bauhaus-blue',
-        iconBg: 'bg-bauhaus-blue text-white',
-        icon: 'fa-info',
-        barColor: 'bg-bauhaus-blue'
-      };
+        success: { title: customTitle || 'Berhasil', iconBg: 'bg-emerald-600 text-white', icon: 'fa-check', barColor: 'bg-emerald-600' },
+        error:   { title: customTitle || 'Gagal', iconBg: 'bg-red-600 text-white', icon: 'fa-xmark', barColor: 'bg-red-600' },
+        warning: { title: customTitle || 'Perhatian', iconBg: 'bg-amber-500 text-white', icon: 'fa-exclamation', barColor: 'bg-amber-500' },
+        info:    { title: customTitle || 'Informasi', iconBg: 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900', icon: 'fa-info', barColor: 'bg-zinc-900 dark:bg-zinc-100' }
+      }[type] || { title: customTitle || 'Informasi', iconBg: 'bg-zinc-900 text-white', icon: 'fa-info', barColor: 'bg-zinc-900' };
 
       const id = 'toast-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
       const div = document.createElement('div');
       div.id = id;
       div.setAttribute('role', 'alert');
-      div.className = `toast-item pointer-events-auto relative overflow-hidden bg-white dark:bg-nightbg-card text-slate-900 dark:text-nighttext border-l-[6px] ${config.accent}`;
+      div.className = 'toast-item pointer-events-auto relative overflow-hidden bg-white/95 dark:bg-[#16161A]/95 backdrop-blur-md text-zinc-900 dark:text-zinc-100';
 
       div.innerHTML = `
         <div class="p-3.5 pr-3 flex items-start gap-3">
-          <div class="w-7 h-7 ${config.iconBg} flex items-center justify-center shrink-0 mt-0.5 text-xs font-black">
+          <div class="w-7 h-7 rounded-xl ${config.iconBg} flex items-center justify-center shrink-0 mt-0.5 text-xs">
             <i class="fa-solid ${config.icon}" aria-hidden="true"></i>
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100 leading-tight">${escapeHtml(config.title)}</p>
-            <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5 leading-snug font-medium">${escapeHtml(message)}</p>
+            <p class="text-xs font-semibold text-zinc-950 dark:text-zinc-50 leading-tight">${escapeHtml(config.title)}</p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">${escapeHtml(message)}</p>
           </div>
-          <button type="button" onclick="dismissLoginToast('${id}')" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white shrink-0 transition" aria-label="Tutup notifikasi">
+          <button type="button" onclick="dismissLoginToast('${id}')" class="w-6 h-6 rounded-lg flex items-center justify-center text-zinc-400 hover:text-zinc-900 dark:hover:text-white shrink-0 transition" aria-label="Tutup notifikasi">
             <i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i>
           </button>
         </div>
-        <div class="h-1 w-full bg-slate-100 dark:bg-slate-800">
+        <div class="h-[3px] w-full bg-zinc-100 dark:bg-zinc-800">
           <div class="toast-progress h-full ${config.barColor}"></div>
         </div>
       `;
@@ -273,7 +237,6 @@
       setTimeout(() => el.remove(), 220);
     }
 
-    // Theme toggle logic
     const themeBtn = document.getElementById('themeToggleBtn');
     if (localStorage.getItem('theme') === 'dark') {
       document.documentElement.classList.add('dark');
@@ -285,7 +248,6 @@
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
     });
 
-    // Handle OAuth error & action query params
     const urlParams = new URLSearchParams(window.location.search);
     const errorParam = urlParams.get('error');
     const actionParam = urlParams.get('action');
@@ -299,21 +261,20 @@
       alertBox.classList.remove('hidden');
 
       if (errorParam === 'cancelled') {
-        alertBox.className = 'mb-4 p-4 border-2 border-bauhaus-dark border-l-[6px] border-l-bauhaus-yellow bg-white dark:bg-nightbg-card text-slate-800 dark:text-slate-200 text-sm flex items-start gap-3 shadow-[4px_4px_0px_#121212]';
+        alertBox.className = 'p-4 rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-200 text-sm flex items-start gap-3';
         alertTitle.textContent = 'Login Dibatalkan';
         alertDesc.textContent = 'Anda membatalkan otorisasi akun Google. Silakan coba kembali atau gunakan Mode Demo.';
       } else if (errorParam === 'invalid_state') {
-        alertBox.className = 'mb-4 p-4 border-2 border-bauhaus-dark border-l-[6px] border-l-bauhaus-red bg-white dark:bg-nightbg-card text-red-700 dark:text-red-300 text-sm flex items-start gap-3 shadow-[4px_4px_0px_#121212]';
+        alertBox.className = 'p-4 rounded-2xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-sm flex items-start gap-3';
         alertTitle.textContent = 'Keamanan Sesi Gagal';
         alertDesc.textContent = 'Token keamanan state tidak cocok. Permintaan ditolak demi keamanan akun Anda.';
       } else {
-        alertBox.className = 'mb-4 p-4 border-2 border-bauhaus-dark border-l-[6px] border-l-bauhaus-red bg-white dark:bg-nightbg-card text-red-700 dark:text-red-300 text-sm flex items-start gap-3 shadow-[4px_4px_0px_#121212]';
+        alertBox.className = 'p-4 rounded-2xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-sm flex items-start gap-3';
         alertTitle.textContent = 'Gagal Melakukan Login';
         alertDesc.textContent = 'Terjadi kendala saat verifikasi akun Google. Silakan coba kembali atau gunakan Mode Demo.';
       }
     }
 
-    // Google Modal Actions
     function openGoogleModal() {
       const modal = document.getElementById('googleModal');
       if (modal) modal.classList.remove('hidden');
@@ -365,7 +326,6 @@
       loginGoogleDirect(name, email);
     }
 
-    // Demo login button handler
     const btnDemoLogin = document.getElementById('btnDemoLogin');
     btnDemoLogin.addEventListener('click', async () => {
       btnDemoLogin.disabled = true;
@@ -378,16 +338,15 @@
         } else {
           showLoginToast(data.error || 'Gagal masuk mode demo.', 'error', 'Login Demo Gagal');
           btnDemoLogin.disabled = false;
-          btnDemoLogin.innerHTML = '<i class="fa-solid fa-play text-xs"></i> Masuk Mode Demo (1-Klik) <i class="fa-solid fa-arrow-right text-xs"></i>';
+          btnDemoLogin.innerHTML = '<i class="fa-solid fa-play text-[11px]"></i> <span>Masuk Mode Demo (1-Klik)</span> <i class="fa-solid fa-arrow-right text-[11px]"></i>';
         }
       } catch (err) {
         showLoginToast('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.', 'error', 'Koneksi Gagal');
         btnDemoLogin.disabled = false;
-        btnDemoLogin.innerHTML = '<i class="fa-solid fa-play text-xs"></i> Masuk Mode Demo (1-Klik) <i class="fa-solid fa-arrow-right text-xs"></i>';
+        btnDemoLogin.innerHTML = '<i class="fa-solid fa-play text-[11px]"></i> <span>Masuk Mode Demo (1-Klik)</span> <i class="fa-solid fa-arrow-right text-[11px]"></i>';
       }
     });
 
-    // Check if user is already authenticated
     fetch('/auth/me')
       .then(res => res.json())
       .then(data => {
