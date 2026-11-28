@@ -9,21 +9,15 @@ import {
   computeWalletBalances,
   validateExpenseAgainstBalances
 } from '../services/walletHelper.js';
+import {
+  isValidDateStr,
+  resolveMaxAllowedDate,
+  isFutureDateStr
+} from '../services/dateHelper.js';
 
 export const transactionsRouter = express.Router();
 
 const MAX_TRANSACTION_AMOUNT = 100000000; // Rp 100 Juta
-
-function getLocalTodayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-function isValidDateStr(dateStr) {
-  if (typeof dateStr !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
-  const parsed = new Date(`${dateStr}T00:00:00Z`);
-  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().startsWith(dateStr);
-}
 
 function enrichTransaction(row, categoriesById) {
   const wallet = parseWalletFromRow(row);
@@ -76,8 +70,12 @@ transactionsRouter.post('/transfer', authMiddleware, async (req, res) => {
     return res.status(400).json({ error: `Nominal pindah dana harus antara Rp 1 dan Rp ${MAX_TRANSACTION_AMOUNT.toLocaleString('id-ID')}.` });
   }
 
+  const clientDate = req.headers['x-client-date'];
   if (occurred_on && !isValidDateStr(occurred_on)) {
     return res.status(400).json({ error: 'Format tanggal tidak valid (gunakan YYYY-MM-DD).' });
+  }
+  if (occurred_on && isFutureDateStr(occurred_on, clientDate)) {
+    return res.status(400).json({ error: 'Tanggal transaksi tidak boleh melebihi hari ini.' });
   }
 
   const from = normalizeWallet(from_wallet_type, from_bank_name);
@@ -135,7 +133,7 @@ transactionsRouter.post('/transfer', authMiddleware, async (req, res) => {
         raw_text: rawTextEncoded,
         source: 'chat',
         parsed_by: 'rule',
-        occurred_on: occurred_on || getLocalTodayStr()
+        occurred_on: occurred_on || resolveMaxAllowedDate(clientDate)
       })
       .select('*')
       .single();
@@ -234,8 +232,12 @@ transactionsRouter.post('/', authMiddleware, async (req, res) => {
     return res.status(400).json({ error: `Nominal transaksi harus antara Rp 1 dan Rp ${MAX_TRANSACTION_AMOUNT.toLocaleString('id-ID')}.` });
   }
 
+  const clientDate = req.headers['x-client-date'];
   if (occurred_on && !isValidDateStr(occurred_on)) {
     return res.status(400).json({ error: 'Format tanggal tidak valid (gunakan YYYY-MM-DD).' });
+  }
+  if (occurred_on && isFutureDateStr(occurred_on, clientDate)) {
+    return res.status(400).json({ error: 'Tanggal transaksi tidak boleh melebihi hari ini.' });
   }
 
   try {
@@ -290,7 +292,7 @@ transactionsRouter.post('/', authMiddleware, async (req, res) => {
         raw_text: rawTextEncoded,
         source: 'chat',
         parsed_by: 'rule',
-        occurred_on: occurred_on || getLocalTodayStr()
+        occurred_on: occurred_on || resolveMaxAllowedDate(clientDate)
       })
       .select('*')
       .single();
@@ -355,8 +357,12 @@ transactionsRouter.put('/:id', authMiddleware, async (req, res) => {
     return res.status(400).json({ error: `Nominal transaksi harus antara Rp 1 dan Rp ${MAX_TRANSACTION_AMOUNT.toLocaleString('id-ID')}.` });
   }
 
+  const clientDate = req.headers['x-client-date'];
   if (occurred_on && !isValidDateStr(occurred_on)) {
     return res.status(400).json({ error: 'Format tanggal tidak valid (gunakan YYYY-MM-DD).' });
+  }
+  if (occurred_on && isFutureDateStr(occurred_on, clientDate)) {
+    return res.status(400).json({ error: 'Tanggal transaksi tidak boleh melebihi hari ini.' });
   }
 
   try {
@@ -431,7 +437,7 @@ transactionsRouter.put('/:id', authMiddleware, async (req, res) => {
         category_id: category.id,
         description: description ? String(description).trim().slice(0, 200) : 'Transaksi',
         raw_text: updatedRawText,
-        occurred_on: occurred_on || getLocalTodayStr(),
+        occurred_on: occurred_on || resolveMaxAllowedDate(clientDate),
         updated_at: new Date().toISOString()
       })
       .eq('id', txId)

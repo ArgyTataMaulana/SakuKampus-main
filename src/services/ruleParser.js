@@ -1,5 +1,6 @@
 // Rule-based Natural Language Processing Parser for Indonesian Financial Queries
 import { detectWalletFromText, detectTransferFromText } from './walletHelper.js';
+import { getWibTodayStr } from './dateHelper.js';
 
 const NUMBER_WORDS = {
   'nol': 0, 'satu': 1, 'sepasang': 2, 'dua': 2, 'tiga': 3, 'empat': 4,
@@ -157,24 +158,21 @@ export function extractNominal(text) {
  */
 export function extractDate(text) {
   const clean = text.toLowerCase();
-  const d = new Date();
+  let offsetDays = 0;
 
   if (clean.includes('kemarin lusa') || clean.includes('2 hari lalu') || clean.includes('dua hari lalu')) {
-    d.setDate(d.getDate() - 2);
+    offsetDays = -2;
   } else if (clean.includes('3 hari lalu') || clean.includes('tiga hari lalu')) {
-    d.setDate(d.getDate() - 3);
+    offsetDays = -3;
   } else if (clean.includes('kemarin')) {
-    d.setDate(d.getDate() - 1);
+    offsetDays = -1;
   } else if (clean.includes('besok')) {
-    d.setDate(d.getDate() + 1);
+    offsetDays = 1;
   } else if (clean.includes('lusa')) {
-    d.setDate(d.getDate() + 2);
+    offsetDays = 2;
   }
 
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return getWibTodayStr(offsetDays);
 }
 
 /**

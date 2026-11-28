@@ -16,6 +16,10 @@ import {
   computeWalletBalances,
   validateExpenseAgainstBalances
 } from '../services/walletHelper.js';
+import {
+  getWibTodayStr,
+  isFutureDateStr
+} from '../services/dateHelper.js';
 
 export const chatRouter = express.Router();
 
@@ -25,8 +29,7 @@ const parsedLimit = parseInt(rawLimit || '50', 10);
 const DAILY_LIMIT = isUnlimited ? Infinity : parsedLimit;
 
 function getLocalTodayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return getWibTodayStr();
 }
 
 function formatUsagePayload(usedCount) {
@@ -169,6 +172,18 @@ chatRouter.post('/', authMiddleware, async (req, res) => {
 
     // 5. Look up Category ID from Supabase categories
     const txData = parseResult.data;
+    const clientDate = req.headers['x-client-date'];
+
+    // 5.0. Reject future dates (cash-basis accounting: only record realized transactions up to today)
+    if (txData.occurred_on && isFutureDateStr(txData.occurred_on, clientDate)) {
+      return res.json({
+        success: false,
+        is_future_date: true,
+        bot_reply: `⚠️ **Tanggal Masa Depan Tidak Diizinkan**\n\nTanggal **${txData.occurred_on}** belum terjadi. SakuKampus hanya mencatat pemasukan, pengeluaran, atau pindah dana hingga **hari ini** agar saldo Anda tetap akurat.`,
+        usage: formatUsagePayload(nextRequestCount)
+      });
+    }
+
     const [allCategories, categoriesById] = await Promise.all([
       getAllCategories(),
       getCategoriesMap()
