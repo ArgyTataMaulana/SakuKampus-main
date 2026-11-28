@@ -8,6 +8,7 @@ let currentAddType = 'expense';
 document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
   initModalListeners();
+  initCurrencyInputs();
 
   // Deep-link routing support
   const path = window.location.pathname.replace(/\/+$/, '').toLowerCase();
@@ -27,6 +28,89 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadDashboardData();
   await loadTransactions();
 });
+
+// ─── Real-Time Rupiah Currency Input Helpers (Auto-dot thousand separators) ───
+function formatRupiahInputNumber(value) {
+  const digits = String(value ?? '').replace(/\D/g, '').replace(/^0+/, '').slice(0, 9);
+  if (!digits) return '';
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function parseRupiahInput(value) {
+  const digits = String(value ?? '').replace(/\D/g, '');
+  return digits ? parseInt(digits, 10) : 0;
+}
+
+function setCurrencyInputValue(inputOrId, amount) {
+  const el = typeof inputOrId === 'string' ? document.getElementById(inputOrId) : inputOrId;
+  if (!el) return;
+  const num = Number(amount);
+  el.value = Number.isFinite(num) && num > 0 ? formatRupiahInputNumber(Math.round(num)) : '';
+}
+
+function initCurrencyInputs() {
+  const placeCaretByDigitCount = (el, digitCount) => {
+    if (document.activeElement !== el || typeof el.setSelectionRange !== 'function') return;
+    const val = el.value;
+    let pos = 0;
+    let seen = 0;
+    while (pos < val.length && seen < digitCount) {
+      if (/\d/.test(val[pos])) seen++;
+      pos++;
+    }
+    el.setSelectionRange(pos, pos);
+  };
+
+  document.querySelectorAll('input[data-currency-input="true"]').forEach((el) => {
+    if (el.dataset.currencyBound === '1') return;
+    el.dataset.currencyBound = '1';
+
+    el.addEventListener('keydown', (e) => {
+      const selStart = el.selectionStart;
+      const selEnd = el.selectionEnd;
+      if (selStart === null || selStart !== selEnd) return;
+
+      // Backspace right after a thousand-separator dot: delete the digit before the dot
+      if (e.key === 'Backspace' && selStart > 1 && el.value[selStart - 1] === '.') {
+        e.preventDefault();
+        const raw = el.value;
+        const digitsBefore = raw.slice(0, selStart - 2).replace(/\D/g, '').length;
+        el.value = formatRupiahInputNumber(raw.slice(0, selStart - 2) + raw.slice(selStart));
+        placeCaretByDigitCount(el, digitsBefore);
+        return;
+      }
+
+      // Delete right before a thousand-separator dot: delete the digit after the dot
+      if (e.key === 'Delete' && el.value[selStart] === '.' && selStart + 1 < el.value.length) {
+        e.preventDefault();
+        const raw = el.value;
+        const digitsBefore = raw.slice(0, selStart).replace(/\D/g, '').length;
+        el.value = formatRupiahInputNumber(raw.slice(0, selStart) + raw.slice(selStart + 2));
+        placeCaretByDigitCount(el, digitsBefore);
+      }
+    });
+
+    el.addEventListener('input', () => {
+      const raw = el.value;
+      const selStart = el.selectionStart ?? raw.length;
+      const rawBeforeCursor = raw.slice(0, selStart);
+      const digitsBeforeRaw = rawBeforeCursor.replace(/\D/g, '');
+      const formatted = formatRupiahInputNumber(raw);
+
+      // Adjust digit count if leading zeros were stripped
+      const totalRawDigits = raw.replace(/\D/g, '');
+      const strippedLeadingZeros = totalRawDigits.length - totalRawDigits.replace(/^0+/, '').length;
+      const targetDigitsBefore = Math.max(0, digitsBeforeRaw.length - Math.min(digitsBeforeRaw.length, strippedLeadingZeros));
+
+      el.value = formatted;
+      placeCaretByDigitCount(el, targetDigitsBefore);
+    });
+
+    el.addEventListener('blur', () => {
+      el.value = formatRupiahInputNumber(el.value);
+    });
+  });
+}
 
 // Proper Production Toast Notification System
 function showToast(message, type = 'success', customTitle = null) {
@@ -319,12 +403,17 @@ async function handleSaveAdd(e) {
   const submitBtn = e.target.querySelector('button[type="submit"]');
   if (submitBtn && submitBtn.disabled) return;
 
-  const amount = document.getElementById('addAmount').value;
+  const amount = parseRupiahInput(document.getElementById('addAmount').value);
   const category_id = document.getElementById('addCategory').value;
   const description = document.getElementById('addDesc').value;
   const occurred_on = document.getElementById('addDate').value;
   const wallet_type = document.getElementById('addWalletType')?.value || 'cash';
   const bank_name = wallet_type === 'bank' ? (document.getElementById('addBankName')?.value || '') : '';
+
+  if (!Number.isFinite(amount) || amount < 100 || amount > 100000000) {
+    showToast('Nominal transaksi harus antara Rp 100 dan Rp 100.000.000.', 'warning', 'Nominal Tidak Valid');
+    return;
+  }
 
   if (submitBtn) {
     submitBtn.disabled = true;
@@ -428,9 +517,14 @@ async function handleSaveTransfer(e) {
   const from_bank_name = from_wallet_type === 'bank' ? (document.getElementById('transferFromBank')?.value || '') : '';
   const to_wallet_type = document.getElementById('transferToWallet')?.value || 'cash';
   const to_bank_name = to_wallet_type === 'bank' ? (document.getElementById('transferToBank')?.value || '') : '';
-  const amount = document.getElementById('transferAmount')?.value;
+  const amount = parseRupiahInput(document.getElementById('transferAmount')?.value);
   const description = document.getElementById('transferDesc')?.value || '';
   const occurred_on = document.getElementById('transferDate')?.value;
+
+  if (!Number.isFinite(amount) || amount < 100 || amount > 100000000) {
+    showToast('Nominal pindah dana harus antara Rp 100 dan Rp 100.000.000.', 'warning', 'Nominal Tidak Valid');
+    return;
+  }
 
   if (from_wallet_type === to_wallet_type && from_bank_name === to_bank_name) {
     showToast('Sumber dana asal dan tujuan tidak boleh sama.', 'warning', 'Periksa Tujuan');
@@ -485,9 +579,8 @@ function getSavedMonthlyBudget() {
 
 function openBudgetModal() {
   const modal = document.getElementById('budgetModal');
-  const input = document.getElementById('budgetAmountInput');
   const saved = getSavedMonthlyBudget();
-  if (input) input.value = saved > 0 ? saved : '';
+  setCurrencyInputValue('budgetAmountInput', saved > 0 ? saved : '');
   if (modal) modal.classList.remove('hidden');
 }
 
@@ -497,15 +590,14 @@ function closeBudgetModal() {
 }
 
 function setBudgetPreset(amount) {
-  const input = document.getElementById('budgetAmountInput');
-  if (input) input.value = amount;
+  setCurrencyInputValue('budgetAmountInput', amount);
 }
 
 function handleSaveBudget(e) {
   e.preventDefault();
-  const val = parseInt(document.getElementById('budgetAmountInput')?.value || '0', 10);
-  if (!Number.isFinite(val) || val < 10000) {
-    showToast('Target anggaran minimal Rp 10.000.', 'warning');
+  const val = parseRupiahInput(document.getElementById('budgetAmountInput')?.value);
+  if (!Number.isFinite(val) || val < 10000 || val > 100000000) {
+    showToast('Target anggaran harus antara Rp 10.000 dan Rp 100.000.000.', 'warning', 'Nominal Tidak Valid');
     return;
   }
   localStorage.setItem(getBudgetStorageKey(), String(val));

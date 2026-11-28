@@ -313,7 +313,7 @@ async function openEditModal(txId) {
     if (res.success) {
       const tx = res.data;
       document.getElementById('editTxId').value = tx.id;
-      document.getElementById('editAmount').value = tx.amount;
+      setCurrencyInputValue('editAmount', tx.amount);
       document.getElementById('editDesc').value = tx.description;
       document.getElementById('editDate').value = tx.occurred_on;
 
@@ -350,12 +350,17 @@ async function handleSaveEdit(e) {
   if (submitBtn && submitBtn.disabled) return;
 
   const txId = document.getElementById('editTxId').value;
-  const amount = document.getElementById('editAmount').value;
+  const amount = parseRupiahInput(document.getElementById('editAmount').value);
   const category_id = document.getElementById('editCategory').value;
   const description = document.getElementById('editDesc').value;
   const occurred_on = document.getElementById('editDate').value;
   const wallet_type = document.getElementById('editWalletType')?.value || 'cash';
   const bank_name = wallet_type === 'bank' ? (document.getElementById('editBankName')?.value || '') : '';
+
+  if (!Number.isFinite(amount) || amount < 100 || amount > 100000000) {
+    showToast('Nominal transaksi harus antara Rp 100 dan Rp 100.000.000.', 'warning', 'Nominal Tidak Valid');
+    return;
+  }
 
   if (submitBtn) {
     submitBtn.disabled = true;

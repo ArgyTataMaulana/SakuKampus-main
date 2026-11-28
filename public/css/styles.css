@@ -736,6 +736,65 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 3px 3px 0px 0px #FFFFFF !important;
 }
 
+/* ─── Currency Input with Fixed "Rp" Prefix (Bauhaus Unified Field) ─── */
+.currency-input-wrap {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  background: #FFFFFF;
+  border: 2px solid var(--bauhaus-dark);
+  border-radius: 0px;
+  box-shadow: 2px 2px 0px 0px var(--bauhaus-dark);
+  transition: box-shadow var(--transition), transform var(--transition), border-color var(--transition);
+}
+.currency-input-wrap:focus-within {
+  transform: translate(-1px, -1px);
+  border-color: var(--bauhaus-blue);
+  box-shadow: 3px 3px 0px 0px var(--bauhaus-blue);
+}
+.currency-prefix {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 13px;
+  background: var(--slate-100);
+  color: var(--bauhaus-dark);
+  border-right: 2px solid var(--bauhaus-dark);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  user-select: none;
+  flex-shrink: 0;
+}
+.currency-input-wrap input.currency-field {
+  flex: 1;
+  min-width: 0;
+  border: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  background: transparent !important;
+}
+.currency-input-wrap input.currency-field:focus {
+  border: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.dark .currency-input-wrap {
+  background: var(--night-card2);
+  border-color: var(--night-border);
+  box-shadow: 2px 2px 0px 0px var(--bauhaus-yellow);
+}
+.dark .currency-input-wrap:focus-within {
+  border-color: var(--bauhaus-yellow);
+  box-shadow: 3px 3px 0px 0px #FFFFFF;
+}
+.dark .currency-prefix {
+  background: var(--night-card);
+  color: var(--bauhaus-yellow);
+  border-right-color: var(--night-border);
+}
+
 /* Clean Text Contrast Overrides */
 .dark [class*="text-nighttext/30"],
 .dark [class*="text-nighttext/40"],
